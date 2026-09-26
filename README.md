@@ -28,3 +28,6 @@ MONGO_DE_URI=... PAINEL_SENHA=... PAINEL_SEGREDO=... npm start
 | `PAINEL_SEGREDO` | — | chave HMAC do cookie de sessão |
 | `PORT` | `10066` | |
 | `HOST` | `127.0.0.1` | |
+| `COOKIE_PATH` | `/passagens` | caminho público do painel (o nginx serve em `/passagens/`) |
+
+Em produção: https://pedro.tradehunter.com.br/passagens/ (nginx → 127.0.0.1:10066, removendo o prefixo).

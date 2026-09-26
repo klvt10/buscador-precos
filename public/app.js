@@ -26,7 +26,7 @@ async function api(caminho, opcoes = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: opcoes.body && JSON.stringify(opcoes.body),
   });
-  if (r.status === 401 && caminho !== '/api/login') {
+  if (r.status === 401 && caminho !== 'api/login') {
     mostrarLogin();
     throw new Error('sessão');
   }
@@ -46,7 +46,7 @@ $('#form-login').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   $('#erro-login').textContent = '';
   try {
-    await api('/api/login', { method: 'POST', body: { senha: ev.target.senha.value } });
+    await api('api/login', { method: 'POST', body: { senha: ev.target.senha.value } });
     ev.target.reset();
     $('#login').hidden = true;
     carregar();
@@ -56,7 +56,7 @@ $('#form-login').addEventListener('submit', async (ev) => {
 });
 
 $('#btn-sair').addEventListener('click', async () => {
-  await fetch('/api/logout', { method: 'POST' });
+  await fetch('api/logout', { method: 'POST' });
   mostrarLogin();
 });
 
@@ -64,7 +64,7 @@ $('#btn-sair').addEventListener('click', async () => {
 
 async function carregar() {
   try {
-    resumo = await api('/api/resumo');
+    resumo = await api('api/resumo');
   } catch (e) {
     if (e.message !== 'sessão') console.error(e);
     return;
@@ -153,7 +153,7 @@ function desenharVoos() {
 }
 
 async function carregarGrafico() {
-  const { pontos } = await api(`/api/historico?dias=${dias}`);
+  const { pontos } = await api(`api/historico?dias=${dias}`);
   $('#grafico-vazio').hidden = pontos.length > 0;
   $('#grafico').parentElement.hidden = pontos.length === 0;
   const desconto = resumo.config.desconto_min;
@@ -226,7 +226,7 @@ async function carregarGrafico() {
 }
 
 async function carregarAlertas() {
-  const docs = await api('/api/alertas');
+  const docs = await api('api/alertas');
   const tb = $('#alertas');
   tb.replaceChildren();
   if (!docs.length) {
@@ -252,7 +252,7 @@ function descreverRota(r) {
 }
 
 async function carregarRotas() {
-  const rotas = await api('/api/rotas');
+  const rotas = await api('api/rotas');
   const tb = $('#rotas');
   tb.replaceChildren();
   for (const r of rotas) {
@@ -277,13 +277,13 @@ $('#periodo').addEventListener('click', (ev) => {
 
 $('#btn-alertas').addEventListener('click', async () => {
   const ativo = !(resumo.estado && resumo.estado.alertas_ativos);
-  await api('/api/alertas-ativos', { method: 'POST', body: { ativo } });
+  await api('api/alertas-ativos', { method: 'POST', body: { ativo } });
   resumo.estado.alertas_ativos = ativo;
   desenharResumo();
 });
 
 $('#btn-consultar').addEventListener('click', async () => {
-  await api('/api/consultar-agora', { method: 'POST' });
+  await api('api/consultar-agora', { method: 'POST' });
   resumo.estado.consultar_agora = true;
   desenharResumo();
 });
@@ -311,7 +311,7 @@ $('#form-config').addEventListener('submit', async (ev) => {
   msg.className = 'msg';
   msg.textContent = 'Salvando…';
   try {
-    await api('/api/config', {
+    await api('api/config', {
       method: 'PUT',
       body: {
         origem: f.origem.value,

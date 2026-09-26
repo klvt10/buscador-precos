@@ -18,7 +18,8 @@ if (!MONGO_URI || !SENHA || !SEGREDO) {
 
 const JANELA_MS = 7 * 24 * 3600 * 1000; // média móvel de 7 dias, igual ao robô
 const SESSAO_MS = 30 * 24 * 3600 * 1000;
-const COOKIE = 'painel';
+const COOKIE = 'passagens';
+const COOKIE_PATH = process.env.COOKIE_PATH || '/passagens';
 const NOMES_FONTES = {
   google: 'Google Flights',
   '123milhas': '123milhas',
@@ -94,12 +95,12 @@ async function main() {
     }
     tentativas.delete(ip);
     const seguro = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.set('Set-Cookie', `${COOKIE}=${assinar(Date.now() + SESSAO_MS)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSAO_MS / 1000}${seguro ? '; Secure' : ''}`);
+    res.set('Set-Cookie', `${COOKIE}=${assinar(Date.now() + SESSAO_MS)}; Path=${COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=${SESSAO_MS / 1000}${seguro ? '; Secure' : ''}`);
     res.json({ ok: true });
   });
 
   app.post('/api/logout', (req, res) => {
-    res.set('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`);
+    res.set('Set-Cookie', `${COOKIE}=; Path=${COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=0`);
     res.json({ ok: true });
   });
 
