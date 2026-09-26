@@ -509,15 +509,12 @@ async function rota() {
   const h = location.hash || '#/alertas';
   const publicas = ['#/entrar', '#/cadastro', '#/esqueci', '#/codigo'];
   if (primeira && !usuario && publicas.includes(h) && h !== '#/codigo') {
-    usuario = (await api('eu').catch(() => null))?.usuario || null; // sessão ainda válida pula o login
+    usuario = (await api('sessao').catch(() => null))?.usuario || null; // sessão ainda válida pula o login
   }
   primeira = false;
   if (!usuario && !publicas.includes(h)) {
-    try {
-      usuario = (await api('eu')).usuario;
-    } catch {
-      return ir('#/entrar');
-    }
+    usuario = (await api('sessao').catch(() => null))?.usuario || null;
+    if (!usuario) return ir('#/entrar');
   }
   if (usuario && publicas.includes(h)) return ir('#/alertas');
   if (usuario && !Object.keys(fontes).length) fontes = await api('fontes').catch(() => ({}));
