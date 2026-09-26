@@ -1,33 +1,26 @@
 # buscador-precos
 
-Painel web do robô de passagens aéreas. Mostra o histórico do total ida + volta com a média móvel de
-7 dias e o gatilho do alerta, os voos mais baratos da última consulta, os alertas enviados e permite
-pausar/religar os alertas, antecipar uma consulta e trocar rota, datas, desconto e intervalo.
+Front do buscador de passagens: páginas estáticas (HTML, CSS e JS sem build) servidas pelo nginx em
+https://pedro.tradehunter.com.br/passagens/. Conversa com o backend (Rust, outro repositório) em
+`/passagens/api/`.
 
-Lê e grava a collection `pedro.passagens` do MongoDB:
+## Telas
 
-| Documento | Uso |
+| Hash | Tela |
 |---|---|
-| `tipo: "consulta"` | uma por consulta do robô: `ts`, `rota`, `ida`, `volta`, `total`, `alertado` |
-| `_id: "estado"` | `alertas_ativos`, `ultimo_alerta`, `consultar_agora` |
-| `_id: "config"` | `origem`, `destino`, `data_ida`, `data_volta`, `desconto_min`, `intervalo_min` — o robô relê a cada 30 s |
+| `#/entrar` | login por celular + senha; aparelho novo pede código no WhatsApp |
+| `#/cadastro` | nome, celular, senha → código no WhatsApp confirma o número |
+| `#/esqueci` | código no WhatsApp → senha nova |
+| `#/codigo` | confirmação do código (cadastro, login ou senha) |
+| `#/alertas` | lista dos alertas do usuário |
+| `#/novo` | novo alerta: origem, destino, ida, volta (opcional), % abaixo da média, intervalo (mín. 5 min) |
+| `#/alertas/<id>` | gráfico do total com média móvel de 7 dias e gatilho, voos mais baratos, estado das fontes, edição |
+| `#/conta` | nome, troca de senha, sair de todos os aparelhos, apagar conta |
 
-`rota` = `ORIGEM-DESTINO-IDA-VOLTA`; a média só usa consultas da mesma rota.
+`public/vendor/` traz Chart.js 4 e o adaptador de datas (date-fns), sem CDN: a CSP da página só
+permite scripts do próprio domínio.
 
-## Rodar
+## Publicar
 
-```sh
-npm install
-MONGO_DE_URI=... PAINEL_SENHA=... PAINEL_SEGREDO=... npm start
-```
-
-| Variável | Padrão | |
-|---|---|---|
-| `MONGO_DE_URI` | — | conexão do MongoDB |
-| `PAINEL_SENHA` | — | senha de acesso ao painel |
-| `PAINEL_SEGREDO` | — | chave HMAC do cookie de sessão |
-| `PORT` | `10066` | |
-| `HOST` | `127.0.0.1` | |
-| `COOKIE_PATH` | `/passagens` | caminho público do painel (o nginx serve em `/passagens/`) |
-
-Em produção: https://pedro.tradehunter.com.br/passagens/ (nginx → 127.0.0.1:10066, removendo o prefixo).
+O nginx lê direto de `public/` neste diretório (`/var/www/pedro.tradehunter.com.br/buscador-precos`):
+o que está na `main` aqui é o que está no ar.
