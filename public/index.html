@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Buscador de Passagens</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="login" class="login" hidden>
+    <form id="form-login" class="card login-card">
+      <h1>Buscador de Passagens</h1>
+      <label>Senha <input type="password" name="senha" autocomplete="current-password" required autofocus></label>
+      <button type="submit" class="btn primario">Entrar</button>
+      <p class="erro" id="erro-login" role="alert"></p>
+    </form>
+  </section>
+
+  <main id="painel" hidden>
+    <header class="topo">
+      <div>
+        <h1 id="titulo-rota">—</h1>
+        <p class="sub" id="sub-rota"></p>
+      </div>
+      <div class="acoes">
+        <button class="btn" id="btn-consultar" title="Antecipa a próxima consulta">Consultar agora</button>
+        <button class="btn" id="btn-alertas"></button>
+        <button class="btn fantasma" id="btn-sair">Sair</button>
+      </div>
+    </header>
+
+    <section class="kpis">
+      <div class="card kpi">
+        <span class="rotulo">Última consulta</span>
+        <strong id="kpi-ultima">—</strong>
+        <span class="detalhe" id="kpi-ultima-det"></span>
+      </div>
+      <div class="card kpi">
+        <span class="rotulo">Média móvel 7 dias</span>
+        <strong id="kpi-media">—</strong>
+        <span class="detalhe" id="kpi-media-det"></span>
+      </div>
+      <div class="card kpi">
+        <span class="rotulo">Gatilho do alerta</span>
+        <strong id="kpi-gatilho">—</strong>
+        <span class="detalhe" id="kpi-gatilho-det"></span>
+      </div>
+      <div class="card kpi">
+        <span class="rotulo">Menor total já visto</span>
+        <strong id="kpi-minimo">—</strong>
+        <span class="detalhe" id="kpi-minimo-det"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-topo">
+        <h2>Total ida + volta</h2>
+        <div class="segmentado" id="periodo">
+          <button data-dias="3">3 d</button>
+          <button data-dias="7">7 d</button>
+          <button data-dias="30" class="ativo">30 d</button>
+          <button data-dias="365">Tudo</button>
+        </div>
+      </div>
+      <div class="grafico"><canvas id="grafico"></canvas></div>
+      <p class="vazio" id="grafico-vazio" hidden>Ainda não há consultas para esta rota.</p>
+    </section>
+
+    <section class="duas">
+      <div class="card">
+        <h2>Mais barato agora</h2>
+        <div id="voos"></div>
+      </div>
+
+      <form class="card" id="form-config">
+        <h2>Busca</h2>
+        <div class="campos">
+          <label>Origem <input name="origem" maxlength="3" required></label>
+          <label>Destino <input name="destino" maxlength="3" required></label>
+          <label>Ida <input type="date" name="data_ida" required></label>
+          <label>Volta <input type="date" name="data_volta" required></label>
+          <label>Alerta abaixo da média (%) <input type="number" name="desconto_pct" min="1" max="90" step="1" required></label>
+          <label>Intervalo (min) <input type="number" name="intervalo_min" min="10" max="720" step="1" required></label>
+        </div>
+        <p class="nota">Só voos diretos, 1 adulto, econômica. Trocar rota ou datas começa um histórico novo; o da rota anterior continua guardado.</p>
+        <div class="linha-botao">
+          <button type="submit" class="btn primario">Salvar</button>
+          <span class="msg" id="msg-config" role="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Alertas enviados</h2>
+      <div class="tabela-rolagem">
+        <table>
+          <thead><tr><th>Quando</th><th>Rota</th><th class="num">Ida</th><th class="num">Volta</th><th class="num">Total</th></tr></thead>
+          <tbody id="alertas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Rotas consultadas</h2>
+      <div class="tabela-rolagem">
+        <table>
+          <thead><tr><th>Rota</th><th class="num">Consultas</th><th class="num">Menor total</th><th>Última</th></tr></thead>
+          <tbody id="rotas"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="vendor/chart.js/chart.umd.min.js"></script>
+  <script src="vendor/date-fns/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

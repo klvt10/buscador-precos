@@ -1,0 +1,26 @@
+{
+  "name": "buscador-precos",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klvt10/buscador-precos.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/klvt10/buscador-precos/issues"
+  },
+  "homepage": "https://github.com/klvt10/buscador-precos#readme",
+  "description": "Painel do robô de passagens: histórico, alertas e configuração da busca",
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^4.4.0",
+    "express": "^4.22.3",
+    "mongodb": "^6.21.0"
+  },
+  "private": true
+}
