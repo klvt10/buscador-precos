@@ -440,8 +440,11 @@ function campoAeroporto(caixa, { rotulo, aoEscolher }) {
 
 function descricao(a) {
   const volta = a.data_volta ? ` a ${diaMes(a.data_volta)}` : ' (só ida)';
-  return `${diaMes(a.data_ida)}${volta} · a cada ${a.intervalo_min} min · alerta ${Math.round(a.desconto_min * 100)} % abaixo da média`;
+  const voos = a.so_diretos === false ? 'com escalas' : 'só diretos';
+  return `${diaMes(a.data_ida)}${volta} · ${voos} · a cada ${rotuloIntervalo(a.intervalo_min)} · alerta ${Math.round(a.desconto_min * 100)} % abaixo da média`;
 }
+
+const textoEscalas = (n) => (!n ? 'direto' : n === 1 ? '1 escala' : `${n} escalas`);
 
 function titulo(a) {
   return `${a.origem} ${a.data_volta ? '⇄' : '→'} ${a.destino}`;
@@ -455,8 +458,9 @@ async function telaAlertas() {
   const t = montar('t-alertas');
   const carregar = async () => {
     const [r] = await Promise.all([api('alertas'), carregarAeroportos().catch(() => null)]);
-    $('[data-limite]', t).textContent = `${r.alertas.length} de ${r.limite} alertas`;
-    $('[data-novo]', t).hidden = r.alertas.length >= r.limite;
+    const n = r.alertas.length;
+    $('[data-limite]', t).textContent = r.limite ? `${n} de ${r.limite} alertas` : `${n} ${n === 1 ? 'alerta' : 'alertas'}`;
+    $('[data-novo]', t).hidden = r.limite != null && n >= r.limite;
     const lista = $('[data-lista]', t);
     lista.replaceChildren();
     if (!r.alertas.length) {
@@ -495,57 +499,112 @@ async function telaAlertas() {
 }
 
 const dataCurta = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' }).replace(/\./g, '');
+const dataCompacta = (iso) => {
+  const d = new Date(`${iso}T12:00:00`);
+  const semana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+  const mes = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+  return `${semana} ${d.getDate()} ${mes}`;
+};
+const diaSemana = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long' });
+const INTERVALOS = [5, 15, 30, 60, 180, 360, 720, 1440];
+const rotuloIntervalo = (m) => (m < 60 ? `${m} min` : m === 1440 ? '1 dia' : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`);
+const noitesEntre = (ida, volta) => Math.round((new Date(`${volta}T12:00:00`) - new Date(`${ida}T12:00:00`)) / 864e5);
+const textoNoites = (n) => (n === 0 ? 'bate e volta' : `${n} ${n === 1 ? 'noite' : 'noites'}`);
 
 // base: alerta existente (edição) ou modelo para um alerta novo (duplicar).
 function formAlerta(lugar, alerta, base = alerta) {
   lugar.replaceChildren($('#t-form-alerta').content.cloneNode(true));
   const f = $('form', lugar);
   const msg = $('[data-msg]', f);
-  const origem = campoAeroporto($('[data-aeroporto="origem"]', f), { rotulo: 'Origem', aoEscolher: (c) => { if (c && !destino.valor) destino.focar(); } });
-  const destino = campoAeroporto($('[data-aeroporto="destino"]', f), { rotulo: 'Destino' });
+  const r = (nome) => $(`[data-r="${nome}"]`, f);
+  const origem = campoAeroporto($('[data-aeroporto="origem"]', f), { rotulo: 'De onde', aoEscolher: (c) => { atualizar(); if (c && !destino.valor) destino.focar(); } });
+  const destino = campoAeroporto($('[data-aeroporto="destino"]', f), { rotulo: 'Para onde', aoEscolher: () => atualizar() });
   const voltaCaixa = $('[data-volta]', f);
   let voltaGuardada = '';
 
   const soIda = () => f.tipo.value === 'so-ida';
-  const atualizarDatas = () => {
+  const soDiretos = () => f.voos.value === 'diretos';
+
+  // Intervalo: pílulas com os valores comuns (e o valor atual do alerta, se for outro).
+  const caixaIntervalos = $('[data-intervalos]', f);
+  const montarIntervalos = (atual) => {
+    const lista = [...new Set([...INTERVALOS, atual])].sort((x, y) => x - y);
+    caixaIntervalos.replaceChildren(...lista.map((m) => el('label', {},
+      Object.assign(el('input', { type: 'radio', name: 'intervalo_opcao', value: String(m) }), { checked: m === atual }),
+      el('span', {}, rotuloIntervalo(m)))));
+    f.intervalo_min.value = atual;
+  };
+  caixaIntervalos.addEventListener('change', (ev) => { f.intervalo_min.value = ev.target.value; atualizar(); });
+
+  const atualizar = () => {
     const ida = f.data_ida.value;
     f.data_volta.min = ida || hojeISO();
     if (ida && f.data_volta.value && f.data_volta.value < ida) f.data_volta.value = '';
     voltaCaixa.hidden = soIda();
     f.data_volta.required = !soIda();
-    const r = $('[data-resumo-datas]', f);
-    if (!ida) r.textContent = '';
-    else if (soIda()) r.textContent = `Só ida · ${dataCurta(ida)}`;
-    else if (!f.data_volta.value) r.textContent = `Ida ${dataCurta(ida)} · escolha a volta`;
-    else {
-      const noites = Math.round((new Date(f.data_volta.value) - new Date(ida)) / 864e5);
-      r.textContent = `${dataCurta(ida)} → ${dataCurta(f.data_volta.value)} · ${noites === 0 ? 'bate e volta' : `${noites} ${noites === 1 ? 'noite' : 'noites'}`}`;
-    }
-  };
-  const atualizarAjustes = () => {
-    $('[data-resumo-ajustes]', f).textContent = `· ${f.desconto_pct.value || '—'} % abaixo da média, a cada ${f.intervalo_min.value || '—'} min${f.ativo.checked ? '' : ', pausado'}`;
+    $('[data-dia="ida"]', f).textContent = ida ? diaSemana(ida) : '';
+    $('[data-dia="volta"]', f).textContent = f.data_volta.value ? diaSemana(f.data_volta.value) : '';
+    const noites = !soIda() && ida && f.data_volta.value ? noitesEntre(ida, f.data_volta.value) : null;
+    const selo = $('[data-noites]', f);
+    selo.hidden = noites == null;
+    selo.textContent = noites == null ? '' : textoNoites(noites);
+    $('[data-dica-voos]', f).textContent = soDiretos()
+      ? 'Só voos sem escala. Em rotas longas ou internacionais, “Com escalas” costuma achar preço (e às vezes o único voo).'
+      : 'Voos diretos e com até 2 escalas; vale o total mais barato entre eles.';
+
+    const pct = Number(f.desconto_pct.value);
+    $('[data-desconto-valor]', f).textContent = `${pct} %`;
+    f.desconto_pct.style.setProperty('--preenchido', `${((pct - f.desconto_pct.min) / (f.desconto_pct.max - f.desconto_pct.min)) * 100}%`);
+    $('[data-desconto-exemplo]', f).textContent = `Exemplo: com média de R$ 1.000, o aviso sai quando o total chega a ${brl(1000 * (1 - pct / 100))} ou menos.`;
+
+    // Resumo ao lado (ou na barra de baixo, no celular).
+    const ao = aeroporto(origem.valor);
+    const ad = aeroporto(destino.valor);
+    r('origem').textContent = origem.valor || '—';
+    r('destino').textContent = destino.valor || '—';
+    r('origem-cidade').textContent = ao ? ao.cidade : 'Origem';
+    r('destino-cidade').textContent = ad ? ad.cidade : 'Destino';
+    r('viagem').textContent = `${soIda() ? 'Só ida' : 'Ida e volta'} · ${soDiretos() ? 'só diretos' : 'com escalas'}`;
+    r('datas').textContent = !ida ? 'Escolha a data da ida'
+      : soIda() ? dataCompacta(ida)
+        : f.data_volta.value ? `${dataCompacta(ida)} → ${dataCompacta(f.data_volta.value)}` : `${dataCompacta(ida)} → escolha a volta`;
+    $('[data-r-duracao]', f).hidden = noites == null;
+    r('duracao').textContent = noites == null ? '' : textoNoites(noites);
+    r('aviso').textContent = `${pct} % abaixo da média${f.ativo.checked ? '' : ' · pausado'}`;
+    r('pesquisa').textContent = `a cada ${rotuloIntervalo(Number(f.intervalo_min.value))}`;
+    const rota = origem.valor && destino.valor ? `${origem.valor} ${soIda() ? '→' : '⇄'} ${destino.valor}` : 'Escolha origem e destino';
+    r('curto').textContent = ida ? `${rota} · ${diaMes(ida)}${!soIda() && f.data_volta.value ? `–${diaMes(f.data_volta.value)}` : ''}` : rota;
   };
 
-  for (const r of f.querySelectorAll('input[name="tipo"]')) {
-    r.addEventListener('change', () => {
+  for (const x of f.querySelectorAll('input[name="tipo"]')) {
+    x.addEventListener('change', () => {
       if (soIda()) { voltaGuardada = f.data_volta.value; f.data_volta.value = ''; }
       else if (!f.data_volta.value) f.data_volta.value = voltaGuardada;
-      atualizarDatas();
+      atualizar();
     });
   }
-  f.data_ida.addEventListener('change', atualizarDatas);
-  f.data_volta.addEventListener('change', atualizarDatas);
-  for (const c of [f.desconto_pct, f.intervalo_min, f.ativo]) c.addEventListener('input', atualizarAjustes);
-  $('[data-trocar]', f).addEventListener('click', () => {
+  for (const c of [f.data_ida, f.data_volta]) c.addEventListener('change', atualizar);
+  for (const c of [...f.querySelectorAll('input[name="voos"]'), f.desconto_pct, f.ativo]) c.addEventListener('input', atualizar);
+  // Ida escolhida e volta vazia: já abre a volta.
+  f.data_ida.addEventListener('change', () => {
+    if (!soIda() && f.data_ida.value && !f.data_volta.value) { f.data_volta.focus(); try { f.data_volta.showPicker(); } catch { /* navegador sem showPicker */ } }
+  });
+  $('[data-trocar]', f).addEventListener('click', (ev) => {
     const o = origem.valor;
     origem.definir(destino.valor, { avisar: false });
     destino.definir(o, { avisar: false });
+    ev.currentTarget.classList.remove('girou');
+    void ev.currentTarget.offsetWidth; // reinicia a animação
+    ev.currentTarget.classList.add('girou');
+    atualizar();
   });
 
   f.data_ida.min = hojeISO();
+  let intervalo = 30;
   if (base) {
     if (alerta) {
-      $('[data-titulo]', f).textContent = 'Editar alerta';
+      $('[data-titulo]', f).textContent = 'Rota';
+      $('[data-salvar]', f).textContent = 'Salvar alterações';
       $('[data-cancelar]', f).hidden = true;
       f.nome.value = alerta.nome || '';
     }
@@ -555,16 +614,19 @@ function formAlerta(lugar, alerta, base = alerta) {
       f.data_volta.value = base.data_volta || '';
     }
     f.tipo.value = base.data_volta ? 'ida-volta' : 'so-ida';
-    f.desconto_pct.value = Math.round(base.desconto_min * 100);
-    f.intervalo_min.value = base.intervalo_min;
+    f.voos.value = base.so_diretos === false ? 'escalas' : 'diretos';
+    const pct = Math.round(base.desconto_min * 100);
+    if (pct > Number(f.desconto_pct.max)) { f.desconto_pct.max = pct; $('[data-desconto-max]', f).textContent = `${pct} %`; }
+    f.desconto_pct.value = pct;
+    intervalo = base.intervalo_min;
     f.ativo.checked = alerta ? alerta.ativo : true;
   }
-  atualizarDatas();
-  atualizarAjustes();
+  montarIntervalos(intervalo);
   // Os nomes das cidades dependem da lista; o código já vale enquanto ela carrega.
   const preencher = () => {
     origem.definir(base?.origem || '', { avisar: false });
     destino.definir(base?.destino || '', { avisar: false });
+    atualizar();
   };
   preencher();
   carregarAeroportos().then(preencher).catch(() => {});
@@ -580,43 +642,44 @@ function formAlerta(lugar, alerta, base = alerta) {
     if (problemas.length) { problemas[0].focar(); return; }
     if (!f.data_ida.value) { f.data_ida.focus(); f.data_ida.reportValidity(); return; }
     if (!soIda() && !f.data_volta.value) { f.data_volta.focus(); f.data_volta.reportValidity(); return; }
-    for (const c of [f.desconto_pct, f.intervalo_min]) {
-      if (!c.checkValidity()) { $('[data-ajustes]', f).open = true; c.focus(); c.reportValidity(); return; }
-    }
     const body = {
       nome: f.nome.value,
       origem: origem.valor,
       destino: destino.valor,
       data_ida: f.data_ida.value,
       data_volta: soIda() ? null : f.data_volta.value,
+      so_diretos: soDiretos(),
       desconto_pct: Number(f.desconto_pct.value),
       intervalo_min: Number(f.intervalo_min.value),
       ativo: f.ativo.checked,
     };
     if (alerta) {
-      const muda = body.origem !== alerta.origem || body.destino !== alerta.destino
+      const muda = body.origem !== alerta.origem || body.destino !== alerta.destino || body.so_diretos !== (alerta.so_diretos !== false)
         || body.data_ida !== alerta.data_ida || (body.data_volta || null) !== (alerta.data_volta || null);
-      if (muda && !confirm('Rota ou datas mudaram: a média recomeça do zero. Continuar?')) return;
+      if (muda && !confirm('Rota, datas ou escalas mudaram: a média recomeça do zero. Continuar?')) return;
     }
     msg.textContent = 'Salvando…';
     enviar(f, async () => {
-      const r = alerta
+      const res = alerta
         ? await api(`alertas/${alerta.id}`, { method: 'PUT', body })
         : await api('alertas', { method: 'POST', body });
       msg.className = 'msg ok';
       msg.textContent = 'Salvo.';
-      ir(`#/alertas/${r.alerta.id}`);
+      ir(`#/alertas/${res.alerta.id}`);
     });
   });
 }
 
 async function telaNovo(baseId) {
   const t = montar('t-alertas');
-  $('.topo', t).replaceChildren(el('div', {}, el('p', { class: 'sub' }, el('a', { href: '#/alertas' }, '← Meus alertas')), el('h1', {}, baseId ? 'Novo alerta a partir de outro' : 'Novo alerta')));
+  $('.topo', t).replaceChildren(el('div', { class: 'novo-cabeca' },
+    el('p', { class: 'sub' }, el('a', { href: '#/alertas' }, '← Meus alertas')),
+    el('h1', {}, baseId ? 'Novo alerta a partir de outro' : 'Novo alerta'),
+    el('p', { class: 'sub' }, 'Os preços são pesquisados sozinhos e o aviso chega no WhatsApp quando o total cai abaixo da média.')));
   let base = null;
   if (baseId) base = (await api(`alertas/${baseId}`).catch(() => null))?.alerta || null;
   const lugar = $('[data-lista]', t);
-  lugar.className = 'lugar-form';
+  lugar.className = 'lugar-novo';
   formAlerta(lugar, null, base);
   $$('.combo-entrada', t)[base ? 1 : 0].focus();
 }
@@ -665,7 +728,7 @@ async function telaDetalhe(id) {
     k('minimo-det').textContent = minimo ? dataHora(minimo.ts) : '';
 
     desenharVoos($('[data-voos]', t), a, ultima);
-    desenharFontes($('[data-fontes]', t), dados.fontes);
+    desenharFontes($('[data-fontes]', t), dados.fontes, a.so_diretos !== false);
   };
 
   const carregarGrafico = async () => {
@@ -703,8 +766,8 @@ async function telaDetalhe(id) {
               label: (ctx) => `${ctx.dataset.label}: ${brl(ctx.parsed.y)}`,
               afterBody: (itens) => {
                 const p = pontos[itens[0].dataIndex];
-                const l = [`Ida ${brl(p.ida)} (${fontes[p.fonte_ida] || p.fonte_ida})`];
-                if (p.volta != null) l.push(`Volta ${brl(p.volta)} (${fontes[p.fonte_volta] || p.fonte_volta})`);
+                const l = [`Ida ${brl(p.ida)} · ${textoEscalas(p.escalas_ida)} (${fontes[p.fonte_ida] || p.fonte_ida})`];
+                if (p.volta != null) l.push(`Volta ${brl(p.volta)} · ${textoEscalas(p.escalas_volta)} (${fontes[p.fonte_volta] || p.fonte_volta})`);
                 if (p.alertado) l.push('Alerta enviado');
                 return l;
               },
@@ -748,7 +811,7 @@ async function telaDetalhe(id) {
   });
   $('[data-ligar]', t).addEventListener('click', async () => {
     const a = dados.alerta;
-    const body = { nome: a.nome, origem: a.origem, destino: a.destino, data_ida: a.data_ida, data_volta: a.data_volta, desconto_pct: Math.round(a.desconto_min * 1000) / 10, intervalo_min: a.intervalo_min, ativo: !a.ativo };
+    const body = { nome: a.nome, origem: a.origem, destino: a.destino, data_ida: a.data_ida, data_volta: a.data_volta, desconto_pct: Math.round(a.desconto_min * 1000) / 10, intervalo_min: a.intervalo_min, so_diretos: a.so_diretos !== false, ativo: !a.ativo };
     const r = await api(`alertas/${id}`, { method: 'PUT', body }).catch((e) => alert(e.message));
     if (r) { dados.alerta = r.alerta; desenhar(); $('[data-form-lugar] input[name=ativo]', t).checked = r.alerta.ativo; }
   });
@@ -773,7 +836,7 @@ function desenharVoos(box, a, ultima) {
     const fonte = fontes[v.fonte] || v.fonte;
     box.append(el('div', { class: 'voo' },
       el('span', { class: 'trecho' }, rotulo),
-      el('span', {}, `${v.companhia}${v.voo ? ` ${v.voo}` : ''} · ${v.partida} → ${v.chegada}`),
+      el('span', {}, `${v.companhia}${v.voo ? ` ${v.voo}` : ''} · ${v.partida} → ${v.chegada} · ${textoEscalas(v.escalas)}`),
       el('span', { class: 'preco' }, brl(v.preco)),
       el('span', { class: 'fonte' }, 'Fonte: ', link ? el('a', { href: link, target: '_blank', rel: 'noopener noreferrer' }, fonte) : fonte)));
   }
@@ -783,7 +846,7 @@ function desenharVoos(box, a, ultima) {
     el('span', { class: 'preco' }, brl(ultima.total))));
 }
 
-function desenharFontes(box, trechos) {
+function desenharFontes(box, trechos, soDiretos) {
   box.replaceChildren();
   for (const tr of trechos || []) {
     const tab = el('table', { class: 'fontes' },
@@ -796,7 +859,7 @@ function desenharFontes(box, trechos) {
       else if (f.ok === false) quando = `sem resposta (${f.ts ? dataHora(f.ts) : ''})`;
       tb.append(el('tr', { class: f.ok === false || f.pausada ? 'apagado' : '' },
         el('td', {}, f.nome),
-        el('td', { class: 'num' }, f.ok ? (f.menor != null ? brl(f.menor) : 'sem voo direto') : '—'),
+        el('td', { class: 'num' }, f.ok ? (f.menor != null ? brl(f.menor) : soDiretos ? 'sem voo direto' : 'sem voo') : '—'),
         el('td', {}, quando)));
     }
     tab.append(tb);

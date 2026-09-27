@@ -13,7 +13,7 @@ https://pedro.tradehunter.com.br/passagens/. Conversa com o backend (Rust, outro
 | `#/esqueci` | código no WhatsApp → senha nova |
 | `#/codigo` | confirmação do código (cadastro, login ou senha) |
 | `#/alertas` | lista dos alertas do usuário |
-| `#/novo` | novo alerta: ida e volta ou só ida, origem e destino com busca (cidade, aeroporto, país ou código; agrupada por país, Brasil primeiro), datas, % abaixo da média, intervalo (mín. 5 min) |
+| `#/novo` | novo alerta: ida e volta ou só ida, só diretos ou com escalas, origem e destino com busca (cidade, aeroporto, país ou código; agrupada por país, Brasil primeiro), datas, % abaixo da média, intervalo (mín. 5 min) |
 | `#/novo/<id>` | novo alerta partindo de outro (Duplicar): mesma rota, datas e regra |
 | `#/alertas/<id>` | gráfico do total com média móvel de 7 dias e gatilho, voos mais baratos, estado das fontes, edição |
 | `#/conta` | nome, troca de senha, sair de todos os aparelhos, apagar conta |
