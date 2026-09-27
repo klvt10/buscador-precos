@@ -1014,12 +1014,71 @@ async function telaConta() {
       ir('#/cadastro');
     });
   });
+  // Operação: só existe na página de conta de administrador (o backend também só responde a admin).
   if (usuario.admin) {
-    $('[data-admin]', t).hidden = false;
-    const mostrar = async () => { $('[data-estado]', t).textContent = JSON.stringify(await api('admin/estado'), null, 2); };
-    await mostrar().catch(() => {});
+    const painel = el('section', { class: 'painel operacao', 'aria-labelledby': 'op-titulo' });
+    $('[data-admin-lugar]', t).replaceWith(painel);
+    const mostrar = async () => desenharOperacao(painel, await api('admin/estado'));
+    await mostrar().catch((e) => painel.replaceChildren(el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota erro' }, e.message)));
     atualizar = setInterval(() => mostrar().catch(() => {}), 10e3);
+  } else {
+    $('[data-admin-lugar]', t).remove();
   }
+}
+
+const duracao = (s) => {
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  return d ? `${d} d ${h} h` : h ? `${h} h ${m} min` : `${m} min`;
+};
+const hora = (ms) => new Date(ms).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+function desenharOperacao(painel, e) {
+  const ag = e.agendador || {};
+  const numero = (rotulo, valor, detalhe) => el('div', { class: 'op-numero' }, el('span', { class: 'rotulo' }, rotulo), el('strong', {}, valor), detalhe ? el('span', { class: 'detalhe' }, detalhe) : null);
+  const barra = (rotulo, usado, total, texto, alerta) => {
+    const pctUso = total ? Math.min(100, (usado / total) * 100) : 0;
+    const trilho = el('div', { class: 'op-trilho', role: 'meter', 'aria-valuemin': '0', 'aria-valuemax': String(total), 'aria-valuenow': String(usado), 'aria-label': rotulo });
+    const cheio = el('span', { class: `op-cheio${alerta ? ' alerta' : ''}` });
+    cheio.style.width = `${pctUso}%`;
+    trilho.append(cheio);
+    return el('div', { class: 'op-barra' }, el('div', { class: 'op-barra-topo' }, el('span', {}, rotulo), el('strong', {}, texto)), trilho);
+  };
+  const vaga = (rotulo, v = {}) => barra(rotulo, v.rodando || 0, v.vagas || 0,
+    `${v.rodando || 0} de ${v.vagas || 0}${v.esperando ? ` · ${v.esperando} na fila` : ''}`, v.esperando > 0);
+  const mb = ag.proxy_residencial_mb_hoje || 0;
+  const teto = ag.proxy_residencial_mb_teto || 0;
+  const nomeFonte = (id) => fontes[id] || id;
+
+  const sites = el('ul', { class: 'fontes' });
+  for (const f of ag.fontes_pausadas || []) {
+    sites.append(el('li', { class: 'fonte falha' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }),
+      el('span', { class: 'fonte-nome' }, nomeFonte(f.fonte), el('small', {}, `${f.seguidas} falhas seguidas`)),
+      el('span', { class: 'fonte-preco' }, `volta às ${hora(f.ate)}`)));
+  }
+  for (const f of ag.fontes_desligadas || []) {
+    sites.append(el('li', { class: 'fonte espera' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }),
+      el('span', { class: 'fonte-nome' }, nomeFonte(f), el('small', {}, 'desligado na configuração')),
+      el('span', { class: 'fonte-preco' }, 'desligado')));
+  }
+  if (!sites.children.length) {
+    sites.append(el('li', { class: 'fonte ok' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }),
+      el('span', { class: 'fonte-nome' }, 'Todos os sites ligados', el('small', {}, 'nenhum em pausa por falha')), el('span')));
+  }
+
+  painel.replaceChildren(
+    el('div', { class: 'painel-topo' },
+      el('div', {}, el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota' }, 'Visível só para administradores.')),
+      el('span', { class: 'chip' }, icone('relogio'), `Atualizado às ${new Date().toLocaleTimeString('pt-BR')}`)),
+    el('div', { class: 'op-numeros' },
+      numero('Usuários', String(e.usuarios ?? '—'), 'com WhatsApp confirmado'),
+      numero('Alertas ativos', String(e.alertas_ativos ?? '—'), `de ${e.alertas ?? '—'} no total`),
+      numero('Pesquisas feitas', String(ag.pesquisas_feitas ?? '—'), `${ag.em_curso || 0} em andamento`),
+      numero('No ar há', ag.no_ar_ha_s != null ? duracao(ag.no_ar_ha_s) : '—', `${ag.resultados_em_memoria ?? 0} resultados em memória`)),
+    el('div', { class: 'op-barras' },
+      barra('Proxy residencial hoje', mb, teto, `${mb.toLocaleString('pt-BR')} de ${teto.toLocaleString('pt-BR')} MB`, teto && mb >= teto * 0.8),
+      vaga('Pesquisas com navegador', ag.navegador),
+      vaga('Pesquisas diretas', ag.http)),
+    el('div', {}, el('p', { class: 'fontes-titulo' }, 'Sites fora do ar ou desligados'), sites));
 }
 
 // --- Roteamento ---------------------------------------------------------------------------------

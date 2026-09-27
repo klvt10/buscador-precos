@@ -373,7 +373,20 @@ body:not(.logado) [data-so-logado] { display: none; }
 .painel.perigo h2 { color: var(--vermelho); }
 .perigo-linha { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .perigo-linha h2 { margin-bottom: 4px; }
-.estado { margin: 0; font-size: .8rem; white-space: pre-wrap; word-break: break-word; color: var(--suave); }
+/* Operação (só admin) */
+.operacao { gap: 18px; }
+.op-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }
+.op-numero { display: grid; gap: 2px; padding: 12px 14px; border-radius: 12px; background: var(--fundo); border: 1px solid var(--borda); min-width: 0; }
+.op-numero .rotulo { font-size: .75rem; }
+.op-numero strong { font-size: 1.4rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.op-numero .detalhe { font-size: .75rem; color: var(--suave); }
+.op-barras { display: grid; gap: 14px; }
+.op-barra { display: grid; gap: 6px; }
+.op-barra-topo { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; color: var(--suave); }
+.op-barra-topo strong { color: var(--texto); font-weight: 600; font-variant-numeric: tabular-nums; }
+.op-trilho { height: 8px; border-radius: 999px; background: var(--fundo-2); overflow: hidden; }
+.op-cheio { display: block; height: 100%; border-radius: inherit; background: var(--primaria); transition: width .3s; }
+.op-cheio.alerta { background: var(--amarelo); }
 
 @media (max-width: 860px) {
   .acesso { grid-template-columns: minmax(0, 1fr); min-height: 0; border-radius: 20px; }
