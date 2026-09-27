@@ -12,6 +12,8 @@
   --serie-media: #8c959f;
   --serie-gatilho: #1a7f37;
   --raio: 10px;
+  --realce: #fff3b0;
+  --sombra: 0 10px 30px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .08);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -27,6 +29,8 @@
     --serie-total: #4493f8;
     --serie-media: #6e7681;
     --serie-gatilho: #3fb950;
+    --realce: #5a4a00;
+    --sombra: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .4);
   }
 }
 
@@ -98,8 +102,8 @@ input {
   font: inherit; color: var(--texto); background: var(--fundo);
   border: 1px solid var(--borda); border-radius: 8px; padding: 7px 10px; min-width: 0;
 }
-input[name="origem"], input[name="destino"] { text-transform: uppercase; }
 input:focus { outline: 2px solid var(--primaria); outline-offset: -1px; }
+input[aria-invalid="true"] { border-color: var(--vermelho); }
 .nota { color: var(--suave); font-size: .85rem; }
 .linha-botao { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .msg { font-size: .9rem; }
@@ -165,3 +169,86 @@ form.card h2 { margin: 0; }
   .acoes { width: 100%; }
   .acoes .btn { flex: 1; }
 }
+
+/* Formulário de alerta */
+.form-alerta { gap: 16px; }
+.form-cabeca { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tipo-viagem label { display: block; font-size: .9rem; color: var(--suave); cursor: pointer; }
+.tipo-viagem label + label { border-left: 1px solid var(--borda); }
+.tipo-viagem input { position: absolute; opacity: 0; pointer-events: none; }
+.tipo-viagem span { display: block; padding: 6px 14px; }
+.tipo-viagem input:checked + span { background: var(--primaria); color: var(--primaria-texto); }
+.tipo-viagem input:focus-visible + span { outline: 2px solid var(--primaria); outline-offset: -4px; }
+
+.rota { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 8px; }
+.trocar {
+  margin-top: 26px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  font: inherit; font-size: 1.1rem; line-height: 1; color: var(--suave);
+  background: var(--card); border: 1px solid var(--borda);
+}
+.trocar:hover { color: var(--primaria); border-color: var(--primaria); }
+
+.campo-aeroporto { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.campo-aeroporto .rotulo { font-size: .85rem; color: var(--suave); }
+.combo { position: relative; }
+.combo-entrada { width: 100%; padding: 9px 56px 9px 12px; font-size: 1rem; }
+.combo-codigo {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none;
+  font: 600 .8rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em;
+  padding: 4px 6px; border-radius: 6px; color: var(--primaria);
+  background: color-mix(in srgb, var(--primaria) 12%, transparent);
+}
+.combo-detalhe { margin: 0; min-height: 1.2em; font-size: .8rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-detalhe.erro { color: var(--vermelho); white-space: normal; }
+
+.combo-lista {
+  position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: max(100%, 340px); max-width: calc(100vw - 32px);
+  max-height: min(380px, 60vh); overflow-y: auto; overscroll-behavior: contain;
+  margin: 0; padding: 0 0 4px; list-style: none;
+  background: var(--card); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra);
+}
+[data-aeroporto="destino"] .combo-lista { left: auto; right: 0; }
+.combo-lista ul { margin: 0; padding: 0; list-style: none; }
+.combo-pais {
+  position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; gap: 8px;
+  padding: 8px 12px 6px; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--suave); background: var(--card); border-bottom: 1px solid var(--borda);
+}
+.combo-pais span { font-weight: 400; font-variant-numeric: tabular-nums; }
+.combo-opcao { display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer; }
+.combo-opcao.ativa { background: color-mix(in srgb, var(--primaria) 12%, transparent); }
+.combo-opcao[aria-selected="true"] .combo-opcao-codigo { background: var(--primaria); color: var(--primaria-texto); }
+.combo-opcao-codigo {
+  flex: none; width: 44px; text-align: center; padding: 3px 0; border-radius: 6px;
+  font: 600 .8rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em;
+  color: var(--texto); background: var(--fundo); border: 1px solid var(--borda);
+}
+.combo-opcao-texto { display: flex; flex-direction: column; min-width: 0; }
+.combo-opcao-cidade { color: var(--texto); font-weight: 500; }
+.combo-opcao-nome { color: var(--suave); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-opcao mark { background: var(--realce); color: inherit; border-radius: 2px; }
+.combo-aviso { padding: 10px 12px; font-size: .85rem; color: var(--suave); }
+.combo-aviso.erro { color: var(--vermelho); }
+
+.datas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.resumo-datas { grid-column: 1 / -1; margin: -4px 0 0; min-height: 1.2em; font-size: .85rem; color: var(--suave); }
+
+.ajustes { border-top: 1px solid var(--borda); padding-top: 12px; }
+.ajustes summary { cursor: pointer; font-weight: 500; }
+.ajustes summary .nota { font-weight: 400; }
+.ajustes[open] summary { margin-bottom: 12px; }
+.ajustes .check { margin-top: 12px; }
+
+.cidades { color: var(--suave); font-size: .9rem; }
+
+@media (max-width: 600px) {
+  .rota { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "o t" "d t"; column-gap: 8px; }
+  .rota [data-aeroporto="origem"] { grid-area: o; }
+  .rota [data-aeroporto="destino"] { grid-area: d; }
+  .trocar { grid-area: t; align-self: center; margin-top: 0; transform: rotate(90deg); }
+  .combo-lista, [data-aeroporto="destino"] .combo-lista { left: 0; right: auto; width: 100%; }
+}
+@media (max-width: 380px) {
+  .datas { grid-template-columns: minmax(0, 1fr); }
+}
+.lugar-form, [data-form-lugar] { max-width: 760px; }

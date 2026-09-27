@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Buscador de Passagens</title>
-  <link rel="stylesheet" href="style.css?v=e7c60a94aa">
+  <link rel="stylesheet" href="style.css?v=e1e598e7cb">
 </head>
 <body>
   <header class="barra" id="barra" hidden>
@@ -92,25 +92,57 @@
 
   <!-- Formulário de alerta (novo e edição) -->
   <template id="t-form-alerta">
-    <form class="card" data-form="alerta">
-      <h2 data-titulo>Novo alerta</h2>
-      <div class="campos">
-        <label class="largo">Nome (opcional) <input name="nome" maxlength="40" placeholder="Ex.: Natal em Brasília"></label>
-        <label>Origem <input name="origem" maxlength="3" placeholder="POA" required></label>
-        <label>Destino <input name="destino" maxlength="3" placeholder="BSB" required></label>
-        <label>Ida <input type="date" name="data_ida" required></label>
-        <label>Volta (vazio = só ida) <input type="date" name="data_volta"></label>
-        <label>Alerta abaixo da média (%) <input type="number" name="desconto_pct" min="1" max="90" step="1" value="15" required></label>
-        <label>Pesquisar a cada (min) <input type="number" name="intervalo_min" min="5" max="1440" step="1" value="20" required></label>
+    <form class="card form-alerta" data-form="alerta" novalidate>
+      <div class="form-cabeca">
+        <h2 data-titulo>Viagem</h2>
+        <div class="segmentado tipo-viagem" role="radiogroup" aria-label="Tipo de viagem">
+          <label><input type="radio" name="tipo" value="ida-volta" checked><span>Ida e volta</span></label>
+          <label><input type="radio" name="tipo" value="so-ida"><span>Só ida</span></label>
+        </div>
       </div>
-      <label class="check"><input type="checkbox" name="ativo" checked> Alerta ligado</label>
-      <p class="nota">Só voos diretos, 1 adulto, econômica. Códigos de aeroporto com 3 letras (POA, GRU, CGH, BSB, GIG…). Sites com proteção antirrobô são consultados no máximo a cada 30 minutos; os demais seguem o intervalo escolhido. Trocar rota ou datas começa uma média nova.</p>
+
+      <div class="rota">
+        <div class="campo-aeroporto" data-aeroporto="origem"></div>
+        <button type="button" class="trocar" data-trocar aria-label="Inverter origem e destino" title="Inverter origem e destino">⇄</button>
+        <div class="campo-aeroporto" data-aeroporto="destino"></div>
+      </div>
+
+      <div class="datas">
+        <label>Ida <input type="date" name="data_ida" required></label>
+        <label data-volta>Volta <input type="date" name="data_volta"></label>
+        <p class="resumo-datas" data-resumo-datas aria-live="polite"></p>
+      </div>
+
+      <details class="ajustes" data-ajustes>
+        <summary>Nome e regra do alerta <span class="nota" data-resumo-ajustes></span></summary>
+        <div class="campos">
+          <label class="largo">Nome (opcional) <input name="nome" maxlength="40" placeholder="Ex.: Natal em Brasília"></label>
+          <label>Avisar quando ficar abaixo da média em (%) <input type="number" name="desconto_pct" min="1" max="90" step="1" value="15" required></label>
+          <label>Pesquisar a cada (min) <input type="number" name="intervalo_min" min="5" max="1440" step="1" value="20" required></label>
+        </div>
+        <label class="check"><input type="checkbox" name="ativo" checked> Alerta ligado</label>
+      </details>
+
+      <p class="nota">Só voos diretos, 1 adulto, classe econômica. Sites com proteção antirrobô são consultados no máximo a cada 30 minutos; os demais seguem o intervalo escolhido. Trocar rota ou datas começa uma média nova.</p>
       <div class="linha-botao">
         <button type="submit" class="btn primario">Salvar</button>
         <a class="btn fantasma" data-cancelar href="#/alertas">Cancelar</a>
         <span class="msg" data-msg role="status"></span>
       </div>
     </form>
+  </template>
+
+  <!-- Campo de aeroporto com busca (origem e destino) -->
+  <template id="t-campo-aeroporto">
+    <label class="rotulo" data-rotulo></label>
+    <div class="combo">
+      <input class="combo-entrada" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+             autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cidade, aeroporto, país ou código">
+      <span class="combo-codigo" data-codigo hidden></span>
+      <ul class="combo-lista" role="listbox" hidden></ul>
+    </div>
+    <p class="combo-detalhe" data-detalhe></p>
+    <input type="hidden" data-valor>
   </template>
 
   <!-- Detalhe de um alerta -->
@@ -124,6 +156,7 @@
         </div>
         <div class="acoes">
           <button class="btn" data-pesquisar>Pesquisar agora</button>
+          <a class="btn" data-duplicar title="Novo alerta com esta rota e estas regras, para mudar datas ou destino">Duplicar</a>
           <button class="btn" data-ligar></button>
         </div>
       </div>
@@ -200,6 +233,6 @@
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=a3276a3c34"></script>
+  <script src="app.js?v=888a87bcc9"></script>
 </body>
 </html>
