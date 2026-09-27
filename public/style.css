@@ -426,6 +426,16 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-tent-icone { font-weight: 700; }
 .adm-tentativas li.falha .adm-tent-icone { color: var(--vermelho); }
 .adm-tentativas li.ok .adm-tent-icone { color: var(--verde); }
+.adm-deduzida { color: var(--suave); font-size: .74rem; }
+.adm-por-saida { display: grid; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--fundo); font-size: .82rem; }
+.adm-por-saida > ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.adm-ps-linha { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.adm-ps-conta { color: var(--suave); font-variant-numeric: tabular-nums; }
+.adm-por-saida li.falha .adm-ps-conta { color: var(--vermelho); }
+.adm-ps-barra { height: 5px; margin-top: 4px; border-radius: 999px; background: color-mix(in srgb, var(--vermelho) 35%, var(--borda)); overflow: hidden; }
+.adm-por-saida li.ok .adm-ps-barra { background: var(--borda); }
+.adm-ps-barra span { display: block; height: 100%; background: var(--verde); }
+.adm-ps-motivos { margin: 4px 0 0; padding-left: 16px; color: var(--suave); font-size: .78rem; }
 .adm-tecnico summary { cursor: pointer; color: var(--suave); font-size: .76rem; }
 .adm-tecnico pre { margin: 6px 0 0; padding: 8px; border-radius: 8px; background: var(--card); border: 1px solid var(--borda); font-size: .72rem; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--suave); max-height: 200px; overflow: auto; }
 .adm-fonte-erro { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .8rem; color: var(--suave); background: var(--fundo); overflow-wrap: anywhere; }

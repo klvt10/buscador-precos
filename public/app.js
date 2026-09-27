@@ -1428,7 +1428,26 @@ function listaTentativas(lista, nomes) {
     el('span', { class: 'adm-tent-icone', 'aria-hidden': 'true' }, t.ok ? '✓' : '✗'),
     el('span', {},
       el('strong', {}, nomes[t.saida] || t.saida), t.vezes > 1 ? ` (${t.vezes}×)` : '', ' — ',
-      t.ok ? 'funcionou.' : t.motivo))));
+      t.ok ? 'funcionou.' : t.motivo,
+      t.deduzida ? el('span', { class: 'adm-deduzida' }, ' (saída deduzida do erro: registro anterior ao detalhamento)') : null))));
+}
+
+// Resumo das últimas 24 h por saída: quantas tentativas funcionaram, quantas falharam e por quê.
+function resumoPorSaida(f, nomes) {
+  const lista = [...(f.por_saida || [])].sort((a, b) => (b.ok + b.falhas) - (a.ok + a.falhas));
+  if (!lista.length) return null;
+  return el('div', { class: 'adm-por-saida' },
+    el('p', { class: 'adm-hist-titulo' }, el('strong', {}, 'Por saída'), ' · últimas 24 h'),
+    el('ul', {}, ...lista.map((s) => {
+      const total = s.ok + s.falhas;
+      const cls = s.falhas === 0 ? 'ok' : s.ok === 0 ? 'falha' : 'misto';
+      return el('li', { class: cls },
+        el('div', { class: 'adm-ps-linha' },
+          el('strong', {}, nomes[s.saida] || s.saida),
+          el('span', { class: 'adm-ps-conta' }, `${s.ok} ok · ${s.falhas} ${s.falhas === 1 ? 'falha' : 'falhas'}`)),
+        el('div', { class: 'adm-ps-barra', 'aria-hidden': 'true' }, (() => { const b = el('span'); b.style.width = `${total ? (s.ok / total) * 100 : 0}%`; return b; })()),
+        s.motivos.length ? el('ul', { class: 'adm-ps-motivos' }, ...s.motivos.map((m) => el('li', {}, `${m.n}× ${m.motivo}`))) : null);
+    })));
 }
 
 // Bloco da última falha e de como veio o último sucesso, com o texto técnico recolhido.
@@ -1507,6 +1526,7 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
         linha('Última falha', dataHoraCurta(f.ultima_falha)),
         f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
         f.mb_pago_24h ? linha('Proxy residencial (24 h)', `${f.mb_pago_24h.toLocaleString('pt-BR')} MB`) : null),
+      resumoPorSaida(f, nomes),
       historicoFonte(f, nomes),
       escolhaSaidas(f, saidas, recarregar),
       msg);
