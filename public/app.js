@@ -1094,8 +1094,7 @@ function escolhaSaidas(f, saidas, recarregar) {
     aviso.hidden = !usa.includes('residencial');
     aviso.textContent = 'Proxy residencial é cobrado por GB e entra no teto diário. Nos sites de navegador o consumo é medido; nos demais, não.';
   };
-  const gravar = async () => {
-    const lista = [principal.value, reserva.value].filter(Boolean);
+  const gravar = async (lista = [principal.value, reserva.value].filter(Boolean)) => {
     if (lista.length === 2 && lista[0] === lista[1]) { msg.className = 'msg erro'; msg.textContent = 'A reserva precisa ser outra saída.'; return; }
     principal.disabled = reserva.disabled = true;
     msg.className = 'msg';
@@ -1114,13 +1113,26 @@ function escolhaSaidas(f, saidas, recarregar) {
   principal.addEventListener('change', () => { avisar(); gravar(); });
   reserva.addEventListener('change', () => { avisar(); gravar(); });
   avisar();
+
+  // Recomendação do site: o que se viu funcionar, com o motivo e o atalho para aplicar.
+  const rec = f.recomendado || { saidas: [], motivo: '' };
+  const segue = JSON.stringify(f.saidas) === JSON.stringify(rec.saidas);
+  const recTexto = rec.saidas.map((x) => nomes[x] || x).join(' → reserva ');
+  const usar = el('button', { type: 'button', class: 'btn pequeno' }, 'Usar o recomendado');
+  usar.addEventListener('click', () => { usar.disabled = true; gravar(rec.saidas); });
+  const recomendacao = rec.saidas.length ? el('div', { class: `adm-recomendado${segue ? ' segue' : ''}` },
+    el('div', { class: 'adm-recomendado-topo' },
+      el('span', { class: 'adm-recomendado-selo' }, segue ? '✓ Recomendado' : 'Recomendado'),
+      el('strong', {}, recTexto)),
+    rec.motivo ? el('p', {}, rec.motivo) : null,
+    segue ? null : usar) : null;
   return el('div', { class: 'adm-saidas' },
     el('div', { class: 'adm-saidas-topo' }, el('span', { class: 'rotulo' }, 'Por onde pesquisa'),
       el('span', { class: 'nota' }, padrao ? 'padrão do site' : `padrão: ${f.saidas_padrao.map((x) => nomes[x] || x).join(' → ')}`)),
     el('label', { class: 'adm-saida' }, el('span', {}, 'Saída'), principal),
     el('label', { class: 'adm-saida' }, el('span', {}, 'Reserva'), reserva),
     el('p', { class: 'nota' }, 'A reserva é usada quando a saída falha na mesma pesquisa.'),
-    aviso, msg);
+    recomendacao, aviso, msg);
 }
 
 function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
@@ -1166,7 +1178,8 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
         linha('Tempo médio', f.ms_medio != null ? `${(f.ms_medio / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s` : '—'),
         linha('Último sucesso', dataHoraCurta(f.ultimo_ok)),
         linha('Última falha', dataHoraCurta(f.ultima_falha)),
-        f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null),
+        f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
+        f.mb_pago_24h ? linha('Proxy residencial (24 h)', `${f.mb_pago_24h.toLocaleString('pt-BR')} MB`) : null),
       f.ultimo_erro ? el('p', { class: 'adm-fonte-erro' }, el('strong', {}, 'Último erro: '), f.ultimo_erro) : null,
       escolhaSaidas(f, saidas, recarregar),
       msg);
