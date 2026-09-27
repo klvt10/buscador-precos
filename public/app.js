@@ -1162,7 +1162,9 @@ function escolhaSaidas(f, saidas, recarregar) {
   const avisar = () => {
     const usa = [principal.value, reserva.value];
     aviso.hidden = !usa.includes('residencial');
-    aviso.textContent = 'Proxy residencial é cobrado por GB e entra no teto diário. Nos sites de navegador o consumo é medido; nos demais, não.';
+    aviso.textContent = f.tipo === 'navegador'
+      ? 'Proxy residencial é cobrado por GB e entra no teto diário; o consumo deste site é medido.'
+      : 'Proxy residencial é cobrado por GB. Este site não abre navegador: o consumo dele não é medido e não entra na conta do teto diário.';
   };
   const gravar = async (lista = [principal.value, reserva.value].filter(Boolean)) => {
     if (lista.length === 2 && lista[0] === lista[1]) { msg.className = 'msg erro'; msg.textContent = 'A reserva precisa ser outra saída.'; return; }
