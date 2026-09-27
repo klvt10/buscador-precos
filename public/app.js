@@ -157,7 +157,7 @@ function telaEntrar() {
         ir('#/codigo');
       } else {
         usuario = r.usuario;
-        ir('#/alertas');
+        irDepoisDoLogin();
       }
     });
   });
@@ -224,7 +224,7 @@ function telaCodigo() {
       const r = await api(caminho, { method: 'POST', body });
       usuario = r.usuario;
       desafio = null;
-      ir('#/alertas');
+      irDepoisDoLogin();
     });
   });
 }
@@ -232,6 +232,7 @@ function telaCodigo() {
 $('#btn-sair').addEventListener('click', async () => {
   await api('sair', { method: 'POST', body: {} }).catch(() => {});
   usuario = null;
+  depoisDoLogin = null;
   ir('#/entrar');
 });
 
@@ -1369,6 +1370,9 @@ function desenharOperacao(painel, e) {
 // --- Roteamento ---------------------------------------------------------------------------------
 
 let primeira = true;
+// Endereço pedido antes do login (ex.: link do WhatsApp para um alerta): depois de entrar, vai para ele.
+let depoisDoLogin = null;
+const irDepoisDoLogin = () => { const h = depoisDoLogin || '#/alertas'; depoisDoLogin = null; ir(h); };
 
 async function rota() {
   const h = location.hash || '#/alertas';
@@ -1379,9 +1383,12 @@ async function rota() {
   primeira = false;
   if (!usuario && !publicas.includes(h)) {
     usuario = (await api('sessao').catch(() => null))?.usuario || null;
-    if (!usuario) return ir('#/entrar');
+    if (!usuario) {
+      if (h !== '#/alertas' && h !== '#/sair') depoisDoLogin = h;
+      return ir('#/entrar');
+    }
   }
-  if (usuario && publicas.includes(h)) return ir('#/alertas');
+  if (usuario && publicas.includes(h)) return irDepoisDoLogin();
   if (usuario && !Object.keys(fontes).length) fontes = await api('fontes').catch(() => ({}));
   if (h === '#/entrar') return telaEntrar();
   if (h === '#/cadastro') return telaCadastro();
