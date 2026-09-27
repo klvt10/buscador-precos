@@ -414,6 +414,20 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-fonte-dados div:first-child { border-top: 0; }
 .adm-fonte-dados dt { color: var(--suave); flex: none; }
 .adm-fonte-dados dd { margin: 0; text-align: right; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.adm-hists { display: grid; gap: 8px; }
+.adm-hist { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--fundo); border-left: 3px solid var(--borda); font-size: .82rem; }
+.adm-hist.falha { border-left-color: var(--vermelho); }
+.adm-hist.sucesso { border-left-color: var(--verde); }
+.adm-hist-titulo { margin: 0; color: var(--suave); }
+.adm-hist-titulo strong { color: var(--texto); }
+.adm-hist-motivo { margin: 0; }
+.adm-tentativas { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.adm-tentativas li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 6px; overflow-wrap: anywhere; }
+.adm-tent-icone { font-weight: 700; }
+.adm-tentativas li.falha .adm-tent-icone { color: var(--vermelho); }
+.adm-tentativas li.ok .adm-tent-icone { color: var(--verde); }
+.adm-tecnico summary { cursor: pointer; color: var(--suave); font-size: .76rem; }
+.adm-tecnico pre { margin: 6px 0 0; padding: 8px; border-radius: 8px; background: var(--card); border: 1px solid var(--borda); font-size: .72rem; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--suave); max-height: 200px; overflow: auto; }
 .adm-fonte-erro { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .8rem; color: var(--suave); background: var(--fundo); overflow-wrap: anywhere; }
 .adm-fonte .msg:empty { display: none; }
 .adm-saidas { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--borda); }

@@ -1405,14 +1405,71 @@ function escolhaSaidas(f, saidas, recarregar) {
     recomendacao, aviso, msg);
 }
 
+// "POA-BSB-2026-12-17-escalas" → "POA → BSB · qui 17 dez · com escalas".
+function textoTrecho(t) {
+  const m = t.match(/^(\w{3})-(\w{3})-(\d{4}-\d{2}-\d{2})(-escalas)?$/);
+  return m ? `${m[1]} → ${m[2]} · ${dataCompacta(m[3])}${m[4] ? ' · com escalas' : ''}` : t;
+}
+
+// Tentativas agrupadas: a mesma saída com o mesmo motivo em seguida vira uma linha com "(3×)".
+function agruparTentativas(lista) {
+  const out = [];
+  for (const t of lista || []) {
+    const ult = out[out.length - 1];
+    if (ult && ult.saida === t.saida && ult.ok === t.ok && ult.motivo === t.motivo) ult.vezes += 1;
+    else out.push({ ...t, vezes: 1 });
+  }
+  return out;
+}
+
+// Lista "✗ Direto do servidor — motivo" / "✓ Proxy datacenter — funcionou".
+function listaTentativas(lista, nomes) {
+  return el('ul', { class: 'adm-tentativas' }, ...agruparTentativas(lista).map((t) => el('li', { class: t.ok ? 'ok' : 'falha' },
+    el('span', { class: 'adm-tent-icone', 'aria-hidden': 'true' }, t.ok ? '✓' : '✗'),
+    el('span', {},
+      el('strong', {}, nomes[t.saida] || t.saida), t.vezes > 1 ? ` (${t.vezes}×)` : '', ' — ',
+      t.ok ? 'funcionou.' : t.motivo))));
+}
+
+// Bloco da última falha e de como veio o último sucesso, com o texto técnico recolhido.
+function historicoFonte(f, nomes) {
+  const partes = [];
+  const falhaMaisNova = f.ultima_falha && (!f.ultimo_ok || f.ultima_falha > f.ultimo_ok);
+  const okTent = f.ultimo_ok_tentativas || [];
+  const okComFalhaAntes = okTent.some((t) => !t.ok);
+  const bloco = (titulo, quando, trecho, corpo, tecnicos) => el('div', { class: `adm-hist ${titulo.classe}` },
+    el('p', { class: 'adm-hist-titulo' }, el('strong', {}, titulo.texto), ` · ${dataHoraCurta(quando)}${trecho ? ` · ${textoTrecho(trecho)}` : ''}`),
+    corpo,
+    tecnicos.length ? el('details', { class: 'adm-tecnico' }, el('summary', {}, 'Detalhe técnico'), el('pre', {}, tecnicos.join('\n\n'))) : null);
+  if (f.ultima_falha) {
+    const tent = f.ultima_falha_tentativas || [];
+    const corpo = tent.length ? listaTentativas(tent, nomes) : el('p', { class: 'adm-hist-motivo' }, f.ultimo_erro || 'Sem detalhe.');
+    const tecnicos = [...new Set([...tent.filter((t) => t.tecnico).map((t) => `${nomes[t.saida] || t.saida}: ${t.tecnico}`), f.ultimo_erro_tecnico].filter(Boolean))];
+    partes.push(bloco({ texto: 'Última falha', classe: falhaMaisNova ? 'falha' : 'antiga' }, f.ultima_falha, f.ultima_falha_trecho, corpo, tecnicos));
+  }
+  if (f.ultimo_ok && okTent.length) {
+    const via = okTent.filter((t) => t.ok).pop();
+    const corpo = okComFalhaAntes ? listaTentativas(okTent, nomes)
+      : el('p', { class: 'adm-hist-motivo' }, `Funcionou ${via ? `por ${(nomes[via.saida] || via.saida).toLowerCase()}` : ''} na primeira tentativa.`);
+    partes.push(bloco({ texto: okComFalhaAntes ? 'Último sucesso (pela reserva)' : 'Último sucesso', classe: 'sucesso' }, f.ultimo_ok, null, corpo, []));
+  }
+  return partes.length ? el('div', { class: 'adm-hists' }, ...(falhaMaisNova ? partes : partes.reverse())) : null;
+}
+
 function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
+  const nomes = Object.fromEntries(saidas.map((s) => [s.id, s.nome.replace(' (cobrado por GB)', '')]));
   caixa.replaceChildren(...lista.map((f) => {
     let estado = 'ok';
     let texto = 'Funcionando';
     if (!f.ligada) { estado = 'desligada'; texto = 'Desligada'; }
     else if (f.pausada_ate) { estado = 'falha'; texto = `Em pausa até ${hora(f.pausada_ate)} · ${f.falhas_seguidas} falhas seguidas`; }
     else if (f.sem_orcamento) { estado = 'falha'; texto = 'Parada: orçamento do proxy de hoje acabou'; }
-    else if (f.ultima_falha && (!f.ultimo_ok || f.ultima_falha > f.ultimo_ok)) { estado = 'alerta'; texto = 'Última pesquisa falhou'; }
+    else if (f.ultima_falha && (!f.ultimo_ok || f.ultima_falha > f.ultimo_ok)) {
+      estado = 'alerta';
+      const falhas = [...new Set((f.ultima_falha_tentativas || []).filter((x) => !x.ok).map((x) => x.saida))];
+      texto = falhas.length > 1 ? `Última pesquisa falhou nas ${falhas.length} saídas`
+        : falhas.length ? `Última pesquisa falhou (${(nomes[falhas[0]] || falhas[0]).toLowerCase()})` : 'Última pesquisa falhou';
+    }
     else if (!f.ultimo_ok) { estado = 'espera'; texto = 'Ainda sem pesquisa'; }
     if (f.ligada && f.pesquisando) texto += ` · ${f.pesquisando} pesquisando agora`;
 
@@ -1450,7 +1507,7 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
         linha('Última falha', dataHoraCurta(f.ultima_falha)),
         f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
         f.mb_pago_24h ? linha('Proxy residencial (24 h)', `${f.mb_pago_24h.toLocaleString('pt-BR')} MB`) : null),
-      f.ultimo_erro ? el('p', { class: 'adm-fonte-erro' }, el('strong', {}, 'Último erro: '), f.ultimo_erro) : null,
+      historicoFonte(f, nomes),
       escolhaSaidas(f, saidas, recarregar),
       msg);
   }));
