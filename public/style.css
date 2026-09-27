@@ -426,6 +426,18 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-tent-icone { font-weight: 700; }
 .adm-tentativas li.falha .adm-tent-icone { color: var(--vermelho); }
 .adm-tentativas li.ok .adm-tent-icone { color: var(--verde); }
+.adm-fonte-dados dd.data-verde { color: var(--verde); font-weight: 700; }
+.adm-fonte-dados dd.data-vermelha { color: var(--vermelho); font-weight: 700; }
+.adm-detalhes { border-top: 1px solid var(--borda); padding-top: 10px; }
+.adm-detalhes > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; list-style: none;
+  font-size: .85rem; font-weight: 600; color: var(--texto); padding: 4px 0;
+}
+.adm-detalhes > summary::-webkit-details-marker { display: none; }
+.adm-detalhes > summary::after { content: "›"; font-size: 1.2rem; line-height: 1; color: var(--suave); transform: rotate(90deg); transition: transform .15s; }
+.adm-detalhes[open] > summary::after { transform: rotate(-90deg); }
+.adm-detalhes[open] > summary { margin-bottom: 10px; }
+.adm-detalhes > .adm-por-saida + .adm-hists { margin-top: 8px; }
 .adm-deduzida { color: var(--suave); font-size: .74rem; }
 .adm-por-saida { display: grid; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--fundo); font-size: .82rem; }
 .adm-por-saida > ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }

@@ -1405,6 +1405,15 @@ function escolhaSaidas(f, saidas, recarregar) {
     recomendacao, aviso, msg);
 }
 
+// Detalhes abertos nos cartões de site (a lista é redesenhada a cada 10 s e não pode fechá-los).
+const detalhesAbertos = new Set();
+function detalhesLembrados(chave, resumo, ...conteudo) {
+  const d = el('details', { class: 'adm-detalhes', 'data-chave': chave }, el('summary', {}, resumo), ...conteudo);
+  d.open = detalhesAbertos.has(chave);
+  d.addEventListener('toggle', () => { if (d.open) detalhesAbertos.add(chave); else detalhesAbertos.delete(chave); });
+  return d;
+}
+
 // "POA-BSB-2026-12-17-escalas" → "POA → BSB · qui 17 dez · com escalas".
 function textoTrecho(t) {
   const m = t.match(/^(\w{3})-(\w{3})-(\d{4}-\d{2}-\d{2})(-escalas)?$/);
@@ -1459,7 +1468,11 @@ function historicoFonte(f, nomes) {
   const bloco = (titulo, quando, trecho, corpo, tecnicos) => el('div', { class: `adm-hist ${titulo.classe}` },
     el('p', { class: 'adm-hist-titulo' }, el('strong', {}, titulo.texto), ` · ${dataHoraCurta(quando)}${trecho ? ` · ${textoTrecho(trecho)}` : ''}`),
     corpo,
-    tecnicos.length ? el('details', { class: 'adm-tecnico' }, el('summary', {}, 'Detalhe técnico'), el('pre', {}, tecnicos.join('\n\n'))) : null);
+    tecnicos.length ? (() => {
+      const d = detalhesLembrados(`${f.fonte}:tecnico:${titulo.texto}`, 'Detalhe técnico', el('pre', {}, tecnicos.join('\n\n')));
+      d.className = 'adm-tecnico';
+      return d;
+    })() : null);
   if (f.ultima_falha) {
     const tent = f.ultima_falha_tentativas || [];
     const corpo = tent.length ? listaTentativas(tent, nomes) : el('p', { class: 'adm-hist-motivo' }, f.ultimo_erro || 'Sem detalhe.');
@@ -1511,7 +1524,10 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
       }
     });
     const taxa = f.n_24h ? Math.round((f.ok_24h / f.n_24h) * 100) : null;
-    const linha = (rotulo, valor) => el('div', {}, el('dt', {}, rotulo), el('dd', {}, valor));
+    const linha = (rotulo, valor, cls) => el('div', {}, el('dt', {}, rotulo), el('dd', cls ? { class: cls } : {}, valor));
+    // O mais recente entre sucesso e falha ganha cor: verde se foi sucesso, vermelho se foi falha.
+    const okMaisNovo = f.ultimo_ok && (!f.ultima_falha || f.ultimo_ok > f.ultima_falha);
+    const falhaMaisNova = f.ultima_falha && !okMaisNovo;
     return el('article', { class: `adm-fonte ${estado}` },
       el('header', { class: 'adm-fonte-topo' },
         el('div', {},
@@ -1522,12 +1538,13 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
       el('dl', { class: 'adm-fonte-dados' },
         linha('Últimas 24 h', f.n_24h ? `${f.ok_24h} de ${f.n_24h} com resposta (${taxa} %)` : 'nenhuma pesquisa'),
         linha('Tempo médio', f.ms_medio != null ? `${(f.ms_medio / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s` : '—'),
-        linha('Último sucesso', dataHoraCurta(f.ultimo_ok)),
-        linha('Última falha', dataHoraCurta(f.ultima_falha)),
+        linha('Último sucesso', dataHoraCurta(f.ultimo_ok), okMaisNovo ? 'data-verde' : null),
+        linha('Última falha', dataHoraCurta(f.ultima_falha), falhaMaisNova ? 'data-vermelha' : null),
         f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
         f.mb_pago_24h ? linha('Proxy residencial (24 h)', `${f.mb_pago_24h.toLocaleString('pt-BR')} MB`) : null),
-      resumoPorSaida(f, nomes),
-      historicoFonte(f, nomes),
+      (f.por_saida?.length || f.ultimo_ok || f.ultima_falha)
+        ? detalhesLembrados(`${f.fonte}:pesquisas`, 'Detalhes das pesquisas', resumoPorSaida(f, nomes), historicoFonte(f, nomes))
+        : null,
       escolhaSaidas(f, saidas, recarregar),
       msg);
   }));
