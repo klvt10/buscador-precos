@@ -375,6 +375,74 @@ body:not(.admin) [data-so-admin] { display: none; }
 .painel.perigo h2 { color: var(--vermelho); }
 .perigo-linha { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .perigo-linha h2 { margin-bottom: 4px; }
+/* Administração */
+.pilulas.abas { display: flex; width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.pilulas.abas::-webkit-scrollbar { display: none; }
+.abas button { flex: none; }
+.abas button { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.abas button[aria-selected="true"] { background: var(--card); color: var(--primaria); font-weight: 600; box-shadow: 0 1px 3px rgba(15, 23, 42, .14), inset 0 0 0 1.5px var(--primaria); }
+.abas button:focus-visible { outline: 2px solid var(--primaria); outline-offset: 1px; }
+.aba-n { font-size: .75rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--fundo-2); color: var(--suave); font-variant-numeric: tabular-nums; }
+.aba-n:empty { display: none; }
+.adm-nota { margin-bottom: 12px; }
+.adm-erro { margin-bottom: 8px; }
+.adm-fontes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 16px; }
+.adm-fonte {
+  display: grid; gap: 12px; align-content: start; padding: 18px; min-width: 0;
+  background: var(--card); border: 1px solid var(--borda); border-radius: 16px; box-shadow: var(--sombra-leve);
+  border-top: 4px solid var(--verde);
+}
+.adm-fonte.falha { border-top-color: var(--vermelho); }
+.adm-fonte.alerta { border-top-color: var(--amarelo); }
+.adm-fonte.espera { border-top-color: var(--suave); }
+.adm-fonte.desligada { border-top-color: var(--borda); }
+.adm-fonte.desligada h3, .adm-fonte.desligada .adm-fonte-dados { opacity: .65; }
+.adm-fonte-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.adm-fonte-topo > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.adm-fonte-topo h3 { margin: 0; font-size: 1.05rem; }
+.adm-fonte-topo .interruptor { height: auto; }
+.adm-fonte-estado { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .88rem; font-weight: 600; }
+.adm-fonte .fonte-ponto { flex: none; background: var(--verde); }
+.adm-fonte.falha .fonte-ponto { background: var(--vermelho); }
+.adm-fonte.alerta .fonte-ponto { background: var(--amarelo); }
+.adm-fonte.espera .fonte-ponto, .adm-fonte.desligada .fonte-ponto { background: var(--suave); }
+.adm-fonte.falha .adm-fonte-estado { color: var(--vermelho); }
+.adm-fonte.alerta .adm-fonte-estado { color: var(--amarelo); }
+.adm-fonte.desligada .adm-fonte-estado { color: var(--suave); }
+.adm-fonte-dados { display: grid; margin: 0; }
+.adm-fonte-dados div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px dashed var(--borda); font-size: .84rem; }
+.adm-fonte-dados div:first-child { border-top: 0; }
+.adm-fonte-dados dt { color: var(--suave); flex: none; }
+.adm-fonte-dados dd { margin: 0; text-align: right; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.adm-fonte-erro { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .8rem; color: var(--suave); background: var(--fundo); overflow-wrap: anywhere; }
+.adm-fonte .msg:empty { display: none; }
+
+.tabela-rolagem { overflow-x: auto; }
+.adm-tabela { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.adm-tabela th { text-align: left; padding: 8px 12px; font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--suave); border-bottom: 1px solid var(--borda); white-space: nowrap; }
+.adm-tabela td { padding: 12px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+.adm-tabela tr:last-child td { border-bottom: 0; }
+.adm-tabela tbody tr:hover { background: var(--fundo); }
+.adm-tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
+.adm-rota { display: grid; }
+.adm-rota strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.adm-rota small { color: var(--suave); }
+.adm-total { display: grid; justify-items: end; gap: 4px; }
+.adm-nome { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 600; }
+.chip-admin { color: var(--primaria); background: var(--primaria-suave); border-color: transparent; }
+.chip-pendente { color: var(--amarelo); background: color-mix(in srgb, var(--amarelo) 12%, transparent); border-color: transparent; }
+@media (max-width: 700px) {
+  .adm-tabela thead { display: none; }
+  .adm-tabela, .adm-tabela tbody, .adm-tabela tr, .adm-tabela td { display: block; width: 100%; }
+  .adm-tabela tr { padding: 12px 0; border-bottom: 1px solid var(--borda); }
+  .adm-tabela tr:last-child { border-bottom: 0; }
+  .adm-tabela tbody tr:hover { background: none; }
+  .adm-tabela td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0; border: 0; text-align: right; }
+  .adm-tabela td::before { content: attr(data-rotulo); flex: none; color: var(--suave); font-size: .78rem; text-align: left; }
+  .adm-tabela td.num { text-align: right; }
+  .adm-rota, .adm-total { justify-items: end; }
+}
+
 /* Operação (só admin) */
 .operacao { gap: 18px; }
 .op-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }

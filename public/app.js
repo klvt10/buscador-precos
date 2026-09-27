@@ -1022,10 +1022,143 @@ async function telaConta() {
 async function telaAdmin() {
   if (!usuario.admin) return ir('#/alertas');
   const t = montar('t-admin');
-  const painel = $('[data-operacao]', t);
-  const mostrar = async () => desenharOperacao(painel, await api('admin/estado'));
-  await mostrar().catch((e) => painel.replaceChildren(el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota erro' }, e.message)));
-  atualizar = setInterval(() => mostrar().catch(() => {}), 10e3);
+  let aba = 'geral';
+  const n = (nome, v) => { $(`[data-n="${nome}"]`, t).textContent = v; };
+
+  const carregar = {
+    geral: async () => desenharOperacao($('[data-operacao]', t), await api('admin/estado')),
+    fontes: async () => {
+      const { fontes: lista } = await api('admin/fontes');
+      n('fontes', `${lista.filter((f) => f.ligada).length}/${lista.length}`);
+      desenharFontesAdmin($('[data-fontes-lista]', t), lista, () => carregar.fontes());
+    },
+    alertas: async () => {
+      const [{ alertas }] = await Promise.all([api('admin/alertas'), carregarAeroportos().catch(() => null)]);
+      n('alertas', alertas.length);
+      desenharAlertasAdmin($('[data-alertas-lista]', t), alertas);
+    },
+    usuarios: async () => {
+      const { usuarios } = await api('admin/usuarios');
+      n('usuarios', usuarios.length);
+      desenharUsuariosAdmin($('[data-usuarios-lista]', t), usuarios);
+    },
+  };
+  const falhou = (onde) => (e) => {
+    const caixa = onde === 'geral' ? $('[data-operacao]', t) : $(`[data-painel="${onde}"]`, t);
+    if (!$('.adm-erro', caixa)) caixa.prepend(el('p', { class: 'nota erro adm-erro' }, e.message));
+  };
+  const mostrarAba = (nova) => {
+    aba = nova;
+    for (const b of $$('[data-aba]', t)) b.setAttribute('aria-selected', String(b.dataset.aba === aba));
+    for (const p of $$('[data-painel]', t)) p.hidden = p.dataset.painel !== aba;
+    carregar[aba]().catch(falhou(aba));
+  };
+  $('.abas', t).addEventListener('click', (ev) => { const b = ev.target.closest('[data-aba]'); if (b) mostrarAba(b.dataset.aba); });
+  $('.abas', t).addEventListener('keydown', (ev) => {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+    const abas = $$('[data-aba]', t);
+    const i = abas.findIndex((b) => b.dataset.aba === aba);
+    const prox = abas[(i + (ev.key === 'ArrowRight' ? 1 : abas.length - 1)) % abas.length];
+    prox.focus();
+    mostrarAba(prox.dataset.aba);
+  });
+  // Todas as contagens logo de cara; depois só a aba aberta se atualiza.
+  await Promise.all(Object.entries(carregar).map(([k, f]) => f().catch(falhou(k))));
+  atualizar = setInterval(() => { if (aba !== 'usuarios') carregar[aba]().catch(() => {}); }, 10e3);
+}
+
+const dataHoraCurta = (ms) => (ms ? dataHora(ms) : '—');
+
+function desenharFontesAdmin(caixa, lista, recarregar) {
+  caixa.replaceChildren(...lista.map((f) => {
+    let estado = 'ok';
+    let texto = 'Funcionando';
+    if (!f.ligada) { estado = 'desligada'; texto = 'Desligada'; }
+    else if (f.pausada_ate) { estado = 'falha'; texto = `Em pausa até ${hora(f.pausada_ate)} · ${f.falhas_seguidas} falhas seguidas`; }
+    else if (f.sem_orcamento) { estado = 'falha'; texto = 'Parada: orçamento do proxy de hoje acabou'; }
+    else if (f.ultima_falha && (!f.ultimo_ok || f.ultima_falha > f.ultimo_ok)) { estado = 'alerta'; texto = 'Última pesquisa falhou'; }
+    else if (!f.ultimo_ok) { estado = 'espera'; texto = 'Ainda sem pesquisa'; }
+    if (f.ligada && f.pesquisando) texto += ` · ${f.pesquisando} pesquisando agora`;
+
+    const chave = el('input', { type: 'checkbox', role: 'switch', 'aria-label': `${f.nome} ligado` });
+    chave.checked = f.ligada;
+    const msg = el('span', { class: 'msg', role: 'status' });
+    chave.addEventListener('change', async () => {
+      const ligar = chave.checked;
+      chave.disabled = true;
+      msg.className = 'msg';
+      msg.textContent = ligar ? 'Ligando…' : 'Desligando…';
+      try {
+        await api(`admin/fontes/${f.fonte}`, { method: 'PUT', body: { ligada: ligar } });
+        await recarregar();
+      } catch (e) {
+        chave.checked = !ligar;
+        chave.disabled = false;
+        msg.className = 'msg erro';
+        msg.textContent = e.message;
+      }
+    });
+    const taxa = f.n_24h ? Math.round((f.ok_24h / f.n_24h) * 100) : null;
+    const linha = (rotulo, valor) => el('div', {}, el('dt', {}, rotulo), el('dd', {}, valor));
+    return el('article', { class: `adm-fonte ${estado}` },
+      el('header', { class: 'adm-fonte-topo' },
+        el('div', {},
+          el('h3', {}, f.nome),
+          el('span', { class: 'chip' }, f.tipo === 'navegador' ? 'Navegador' : 'Direta')),
+        el('label', { class: 'interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }))),
+      el('p', { class: 'adm-fonte-estado' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }), texto),
+      el('dl', { class: 'adm-fonte-dados' },
+        linha('Últimas 24 h', f.n_24h ? `${f.ok_24h} de ${f.n_24h} com resposta (${taxa} %)` : 'nenhuma pesquisa'),
+        linha('Tempo médio', f.ms_medio != null ? `${(f.ms_medio / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s` : '—'),
+        linha('Último sucesso', dataHoraCurta(f.ultimo_ok)),
+        linha('Última falha', dataHoraCurta(f.ultima_falha)),
+        f.mb_24h ? linha('Proxy pago (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
+        linha('Saída', f.saida)),
+      f.ultimo_erro ? el('p', { class: 'adm-fonte-erro' }, el('strong', {}, 'Último erro: '), f.ultimo_erro) : null,
+      msg);
+  }));
+}
+
+// Tabela que vira cartões no celular (cada célula leva o nome da coluna em data-rotulo).
+function tabelaAdmin(colunas, linhas, vazio) {
+  if (!linhas.length) return el('p', { class: 'vazio' }, vazio);
+  return el('div', { class: 'tabela-rolagem' }, el('table', { class: 'adm-tabela' },
+    el('thead', {}, el('tr', {}, ...colunas.map((c) => el('th', { class: c.num ? 'num' : null }, c.nome)))),
+    el('tbody', {}, ...linhas.map((l) => el('tr', {}, ...colunas.map((c, i) => el('td', { 'data-rotulo': c.nome, class: c.num ? 'num' : null }, l[i])))))));
+}
+
+function desenharAlertasAdmin(caixa, alertas) {
+  caixa.replaceChildren(tabelaAdmin(
+    [{ nome: 'Usuário' }, { nome: 'Rota' }, { nome: 'Datas' }, { nome: 'Regra' }, { nome: 'Última consulta' }, { nome: 'Total', num: true }],
+    alertas.map((x) => {
+      const a = x.alerta;
+      const cmp = comparacao(x.ultima, x.media);
+      return [
+        x.usuario || '—',
+        el('span', { class: 'adm-rota' }, el('strong', {}, titulo(a)), el('small', {}, `${cidades(a)}${a.nome ? ` · ${a.nome}` : ''}`)),
+        datasTexto(a),
+        `${a.so_diretos === false ? 'Com escalas' : 'Só diretos'} · ${Math.round(a.desconto_min * 100)} % · a cada ${rotuloIntervalo(a.intervalo_min)}`,
+        x.ultima ? dataHora(x.ultima.ts) : 'ainda não',
+        el('span', { class: 'adm-total' }, el('strong', {}, x.ultima ? brl(x.ultima.total) : '—'), x.ultima ? el('span', { class: `variacao ${cmp.classe}` }, cmp.texto) : null),
+      ];
+    }),
+    'Nenhum alerta ligado.'));
+}
+
+function desenharUsuariosAdmin(caixa, usuarios) {
+  caixa.replaceChildren(tabelaAdmin(
+    [{ nome: 'Nome' }, { nome: 'Celular' }, { nome: 'Conta criada' }, { nome: 'Alertas', num: true }, { nome: 'Sessões', num: true }, { nome: 'Último login' }],
+    usuarios.map((x) => [
+      el('span', { class: 'adm-nome' }, x.nome,
+        x.admin ? el('span', { class: 'chip chip-admin' }, 'admin') : null,
+        x.verificado ? null : el('span', { class: 'chip chip-pendente' }, 'cadastro pendente')),
+      x.telefone,
+      new Date(x.criado_em).toLocaleDateString('pt-BR'),
+      `${x.alertas_ligados} ligados de ${x.alertas}`,
+      String(x.sessoes),
+      x.ultimo_login ? dataHora(x.ultimo_login) : '—',
+    ]),
+    'Nenhum usuário.'));
 }
 
 const duracao = (s) => {

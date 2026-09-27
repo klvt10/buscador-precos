@@ -7,7 +7,7 @@
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
   <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=1608c0ebf1">
+  <link rel="stylesheet" href="style.css?v=fd349b5cb2">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -353,8 +353,26 @@
   <!-- Administração (só admin) -->
   <template id="t-admin">
     <section class="conteudo">
-      <div class="topo"><div><h1>Administração</h1><p class="sub">Estado do serviço de pesquisa. Página e dados só para administradores.</p></div></div>
-      <section class="painel operacao" aria-labelledby="op-titulo" data-operacao></section>
+      <div class="topo"><div><h1>Administração</h1><p class="sub">Serviço de pesquisa, sites, alertas e contas. Página e dados só para administradores.</p></div></div>
+      <div class="abas pilulas" role="tablist" aria-label="Seções da administração">
+        <button type="button" role="tab" data-aba="geral" aria-selected="true">Visão geral</button>
+        <button type="button" role="tab" data-aba="fontes" aria-selected="false">Sites <span class="aba-n" data-n="fontes"></span></button>
+        <button type="button" role="tab" data-aba="alertas" aria-selected="false">Alertas ligados <span class="aba-n" data-n="alertas"></span></button>
+        <button type="button" role="tab" data-aba="usuarios" aria-selected="false">Usuários <span class="aba-n" data-n="usuarios"></span></button>
+      </div>
+      <section class="painel operacao" role="tabpanel" data-painel="geral" data-operacao></section>
+      <section role="tabpanel" data-painel="fontes" hidden>
+        <p class="nota adm-nota">A chave vale na hora para todos os alertas e fica gravada (sobrevive a reinício). Ligar um site zera a pausa por falhas. A saída (direto ou proxy) vem da configuração do serviço.</p>
+        <div class="adm-fontes" data-fontes-lista></div>
+      </section>
+      <section class="painel" role="tabpanel" data-painel="alertas" hidden>
+        <div class="painel-topo"><h2>Alertas ligados</h2><p class="nota">Ligados e com a ida por vir: são os que estão sendo pesquisados.</p></div>
+        <div data-alertas-lista></div>
+      </section>
+      <section class="painel" role="tabpanel" data-painel="usuarios" hidden>
+        <div class="painel-topo"><h2>Usuários</h2><p class="nota">Mais recentes primeiro.</p></div>
+        <div data-usuarios-lista></div>
+      </section>
     </section>
   </template>
 
@@ -399,6 +417,6 @@
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=c50e677cbb"></script>
+  <script src="app.js?v=7e4f4e5925"></script>
 </body>
 </html>
