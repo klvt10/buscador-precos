@@ -521,8 +521,14 @@ function situacao(a) {
   return a.ativo ? { classe: 'ligado', texto: 'Ligado' } : { classe: 'pausado', texto: 'Pausado' };
 }
 
+// Trecho sem nenhum voo nos sites que responderam: frase curta para cartão e selo.
+function textoSemVoos(sv) {
+  return `${sv.so_diretos ? 'Sem voo direto' : 'Nenhum voo'} em ${dataCompacta(sv.data)} · ${sv.origem} → ${sv.destino}`;
+}
+
 // Diferença da última consulta para a média: texto e classe (abaixo/acima).
-function comparacao(ultima, media) {
+function comparacao(ultima, media, semVoos) {
+  if (!ultima && semVoos) return { texto: textoSemVoos(semVoos), classe: 'sem-voos' };
   if (ultima && media) {
     const dif = (ultima.total / media - 1) * 100;
     return { texto: `${pct(dif)} ${dif < 0 ? 'abaixo' : 'acima'} da média`, classe: dif < 0 ? 'abaixo' : 'acima' };
@@ -537,7 +543,7 @@ function datasTexto(a) {
 function cartaoAlerta(x) {
   const a = x.alerta;
   const sit = situacao(a);
-  const cmp = comparacao(x.ultima, x.media);
+  const cmp = comparacao(x.ultima, x.media, x.sem_voos);
   const ponta = (codigo, fim) => el('div', { class: `fa-ponta${fim ? ' fim' : ''}` }, el('strong', {}, codigo), el('span', {}, cidadeDe(codigo)));
   return el('a', { class: `cartao-alerta ${sit.classe}`, href: `#/alertas/${a.id}` },
     el('div', { class: 'ca-bilhete' },
@@ -599,7 +605,7 @@ const dataCompacta = (iso) => {
   return `${semana} ${d.getDate()} ${mes}`;
 };
 const diaSemana = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long' });
-const INTERVALOS = [5, 15, 30, 60, 180, 360, 720, 1440];
+const INTERVALOS = [30, 60, 180, 360, 720, 1440];
 const rotuloIntervalo = (m) => (m < 60 ? `${m} min` : m === 1440 ? '1 dia' : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`);
 const noitesEntre = (ida, volta) => Math.round((new Date(`${volta}T12:00:00`) - new Date(`${ida}T12:00:00`)) / 864e5);
 const textoNoites = (n) => (n === 0 ? 'bate e volta' : `${n} ${n === 1 ? 'noite' : 'noites'}`);
@@ -784,10 +790,19 @@ function linkSeguro(u) {
   } catch { return null; }
 }
 
-async function telaDetalhe(id) {
+// comoAdmin: detalhe de alerta de qualquer usuário, só leitura (Administração › Alertas ligados).
+async function telaDetalhe(id, { comoAdmin = false } = {}) {
+  if (comoAdmin && !usuario.admin) return ir('#/alertas');
   const t = montar('t-detalhe');
+  const base = comoAdmin ? `admin/alertas/${id}` : `alertas/${id}`;
   let dias = 30;
   let dados = null;
+  if (comoAdmin) {
+    for (const x of [$('.det-acoes', t), $('.secao-titulo', t), $('[data-form-lugar]', t), $('.painel.perigo', t)]) x.remove();
+    const voltar = $('.voltar a', t);
+    voltar.href = '#/admin/alertas';
+    voltar.replaceChildren(icone('seta'), 'Alertas ligados');
+  }
 
   const desenhar = () => {
     const { alerta: a, ultima, media, n_media: n, minimo } = dados;
@@ -808,13 +823,15 @@ async function telaDetalhe(id) {
     b('aviso').textContent = `${Math.round(a.desconto_min * 100)} % abaixo da média`;
     b('pesquisa').textContent = `A cada ${rotuloIntervalo(a.intervalo_min)}`;
     $('[data-titulo-grafico]', t).textContent = a.data_volta ? 'Total ida + volta' : 'Preço da ida';
-    const lig = $('[data-ligar]', t);
-    lig.replaceChildren(icone(a.ativo ? 'pausa' : 'play'), a.ativo ? 'Pausar alerta' : 'Religar alerta');
-    lig.title = a.ativo ? 'Pausa as pesquisas e os avisos no WhatsApp' : 'Volta a pesquisar e avisar';
-    const pesq = $('[data-pesquisar]', t);
-    pesq.disabled = a.pesquisa_pedida;
-    pesq.classList.toggle('girando', a.pesquisa_pedida);
-    $('span', pesq).textContent = a.pesquisa_pedida ? 'Pesquisando…' : 'Pesquisar agora';
+    if (!comoAdmin) {
+      const lig = $('[data-ligar]', t);
+      lig.replaceChildren(icone(a.ativo ? 'pausa' : 'play'), a.ativo ? 'Pausar alerta' : 'Religar alerta');
+      lig.title = a.ativo ? 'Pausa as pesquisas e os avisos no WhatsApp' : 'Volta a pesquisar e avisar';
+      const pesq = $('[data-pesquisar]', t);
+      pesq.disabled = a.pesquisa_pedida;
+      pesq.classList.toggle('girando', a.pesquisa_pedida);
+      $('span', pesq).textContent = a.pesquisa_pedida ? 'Pesquisando…' : 'Pesquisar agora';
+    }
 
     const k = (nome) => $(`[data-k="${nome}"]`, t);
     k('ultima').textContent = ultima ? brl(ultima.total) : '—';
@@ -828,12 +845,21 @@ async function telaDetalhe(id) {
     k('minimo').textContent = minimo ? brl(minimo.total) : '—';
     k('minimo-det').textContent = minimo ? dataHora(minimo.ts) : '';
 
+    desenharSemVoos(t, dados, comoAdmin, id);
+    if (comoAdmin && dados.usuario) {
+      let dono = $('[data-dono]', t);
+      if (!dono) {
+        dono = el('p', { class: 'det-dono', 'data-dono': '' });
+        $('.det-bilhete', t).before(dono);
+      }
+      dono.replaceChildren(el('span', { class: 'chip chip-admin' }, 'Administração'), ` Alerta de ${dados.usuario.nome} · ${dados.usuario.telefone} · criado em ${new Date(dados.criado_em).toLocaleDateString('pt-BR')} · só leitura`);
+    }
     desenharVoos($('[data-voos]', t), a, ultima);
     desenharFontes($('[data-fontes]', t), dados.fontes, a.so_diretos !== false);
   };
 
   const carregarGrafico = async () => {
-    const { pontos } = await api(`alertas/${id}/historico?dias=${dias}`);
+    const { pontos } = await api(`${base}/historico?dias=${dias}`);
     const vazio = pontos.length === 0;
     $('[data-grafico-vazio]', t).hidden = !vazio;
     $('.grafico', t).hidden = vazio;
@@ -847,7 +873,7 @@ async function telaDetalhe(id) {
       type: 'line',
       data: {
         datasets: [
-          { label: 'Total', data: serie((p) => p.total), borderColor: cor('--serie-total'), backgroundColor: cor('--serie-total'), borderWidth: 2, pointRadius: pontos.map((p) => (p.alertado ? 5 : 0)), pointHoverRadius: 4, tension: 0.2 },
+          { label: 'Total', data: serie((p) => p.total), borderColor: cor('--serie-total'), backgroundColor: cor('--serie-total'), borderWidth: 2, pointRadius: pontos.map((p) => (p.alertado ? 5 : pontos.length < 3 ? 4 : 0)), pointHoverRadius: 4, tension: 0.2 },
           { label: 'Média 7 dias', data: serie((p) => p.media), borderColor: cor('--serie-media'), borderWidth: 1.5, pointRadius: 0, spanGaps: true },
           { label: 'Gatilho do aviso', data: serie((p) => p.media && p.media * (1 - desconto)), borderColor: cor('--serie-gatilho'), borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, spanGaps: true },
         ],
@@ -880,7 +906,7 @@ async function telaDetalhe(id) {
   };
 
   const carregar = async (comGrafico) => {
-    dados = await api(`alertas/${id}`);
+    dados = await api(base);
     desenhar();
     if (comGrafico) await carregarGrafico();
   };
@@ -889,15 +915,12 @@ async function telaDetalhe(id) {
     await Promise.all([carregar(false), carregarAeroportos().catch(() => null)]);
     desenhar();
   } catch (e) {
-    $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', {}, e.message), el('a', { href: '#/alertas' }, '← Meus alertas')));
+    $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', {}, e.message), el('a', { href: comoAdmin ? '#/admin/alertas' : '#/alertas' }, '← Voltar')));
     return;
   }
-  formAlerta($('[data-form-lugar]', t), dados.alerta);
-  $('[data-duplicar]', t).href = `#/novo/${id}`;
   await carregarGrafico();
   let voltas = 0;
   atualizar = setInterval(() => { voltas += 1; carregar(voltas % 4 === 0).catch(() => {}); }, 15e3);
-
   window.addEventListener('tema', () => carregarGrafico().catch(() => {}), { signal: sinalTela.signal });
   $('[data-periodo]', t).addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
@@ -906,6 +929,10 @@ async function telaDetalhe(id) {
     for (const x of $('[data-periodo]', t).children) x.classList.toggle('ativo', x === b);
     carregarGrafico();
   });
+  if (comoAdmin) return;
+  formAlerta($('[data-form-lugar]', t), dados.alerta);
+  $('[data-duplicar]', t).href = `#/novo/${id}`;
+
   $('[data-pesquisar]', t).addEventListener('click', async () => {
     await api(`alertas/${id}/pesquisar`, { method: 'POST', body: {} });
     dados.alerta.pesquisa_pedida = true;
@@ -922,6 +949,46 @@ async function telaDetalhe(id) {
     await api(`alertas/${id}`, { method: 'DELETE' });
     ir('#/alertas');
   });
+}
+
+// Aviso quando os sites responderam e nenhum achou voo: explica e oferece o próximo passo.
+function desenharSemVoos(t, dados, comoAdmin, id) {
+  let caixa = $('[data-sem-voos]', t);
+  const sv = dados.sem_voos;
+  if (!sv || dados.ultima) { if (caixa) caixa.remove(); return; }
+  if (!caixa) {
+    caixa = el('div', { class: 'aviso-sem-voos', role: 'status', 'data-sem-voos': '' });
+    $('.det-bilhete', t).after(caixa);
+  }
+  const a = dados.alerta;
+  const acoes = [];
+  if (!comoAdmin && sv.so_diretos) {
+    const b = el('button', { type: 'button', class: 'btn primario' }, icone('escala'), 'Incluir voos com escala');
+    b.addEventListener('click', async () => {
+      b.disabled = true;
+      const body = { nome: a.nome, origem: a.origem, destino: a.destino, data_ida: a.data_ida, data_volta: a.data_volta, desconto_pct: Math.round(a.desconto_min * 1000) / 10, intervalo_min: a.intervalo_min, so_diretos: false, ativo: a.ativo };
+      try {
+        await api(`alertas/${id}`, { method: 'PUT', body });
+        ir(`#/alertas/${id}`);
+        rota();
+      } catch (e) { b.disabled = false; alert(e.message); }
+    });
+    acoes.push(b);
+  }
+  if (!comoAdmin) {
+    const d = el('button', { type: 'button', class: 'btn' }, icone('calendario'), 'Trocar as datas');
+    d.addEventListener('click', () => { const f = $('[data-form-lugar]', t); f.scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('input[name=data_ida]', f)?.focus(), 400); });
+    acoes.push(d);
+  }
+  const quando = `${sv.origem} → ${sv.destino} em ${dataCompacta(sv.data)}`;
+  caixa.replaceChildren(
+    el('span', { class: 'aviso-sem-voos-icone', 'aria-hidden': 'true' }, icone('lupa', '')),
+    el('div', { class: 'aviso-sem-voos-texto' },
+      el('strong', {}, sv.so_diretos ? `Nenhum voo direto ${quando}` : `Nenhum voo ${quando}`),
+      el('p', {}, `${sv.sites} ${sv.sites === 1 ? 'site respondeu' : 'sites responderam'} e nenhum tem ${sv.so_diretos ? 'voo direto' : 'voo'} nessa data${a.data_volta ? '' : ''}. `
+        + (sv.so_diretos ? 'Com escala costuma haver opção; outra data também pode ter voo direto. ' : 'Outra data ou outro aeroporto próximo pode ter voo. ')
+        + 'As pesquisas continuam no intervalo do alerta: se aparecer voo, a primeira consulta sai sozinha.'),
+      acoes.length ? el('div', { class: 'aviso-sem-voos-acoes' }, ...acoes) : null));
 }
 
 function desenharVoos(box, a, ultima) {
@@ -1019,10 +1086,10 @@ async function telaConta() {
 
 // --- Administração ------------------------------------------------------------------------------
 // Só admin chega aqui; o backend também só responde admin/estado a admin (404 para os demais).
-async function telaAdmin() {
+async function telaAdmin(abaInicial = 'geral') {
   if (!usuario.admin) return ir('#/alertas');
   const t = montar('t-admin');
-  let aba = 'geral';
+  let aba = abaInicial;
   const n = (nome, v) => { $(`[data-n="${nome}"]`, t).textContent = v; };
 
   const carregar = {
@@ -1051,6 +1118,7 @@ async function telaAdmin() {
   };
   const mostrarAba = (nova) => {
     aba = nova;
+    history.replaceState(null, '', nova === 'geral' ? '#/admin' : `#/admin/${nova === 'fontes' ? 'sites' : nova}`);
     for (const b of $$('[data-aba]', t)) b.setAttribute('aria-selected', String(b.dataset.aba === aba));
     for (const p of $$('[data-painel]', t)) p.hidden = p.dataset.painel !== aba;
     carregar[aba]().catch(falhou(aba));
@@ -1065,6 +1133,8 @@ async function telaAdmin() {
     mostrarAba(prox.dataset.aba);
   });
   // Todas as contagens logo de cara; depois só a aba aberta se atualiza.
+  for (const b of $$('[data-aba]', t)) b.setAttribute('aria-selected', String(b.dataset.aba === aba));
+  for (const p of $$('[data-painel]', t)) p.hidden = p.dataset.painel !== aba;
   await Promise.all(Object.entries(carregar).map(([k, f]) => f().catch(falhou(k))));
   atualizar = setInterval(() => { if (aba !== 'usuarios') carregar[aba]().catch(() => {}); }, 10e3);
 }
@@ -1114,17 +1184,18 @@ function escolhaSaidas(f, saidas, recarregar) {
   reserva.addEventListener('change', () => { avisar(); gravar(); });
   avisar();
 
-  // Recomendação do site: o que se viu funcionar, com o motivo e o atalho para aplicar.
-  const rec = f.recomendado || { saidas: [], motivo: '' };
+  // Recomendação do site: saída e reserva, cada uma com o porquê, e o atalho para aplicar.
+  const rec = f.recomendado || { saidas: [] };
   const segue = JSON.stringify(f.saidas) === JSON.stringify(rec.saidas);
-  const recTexto = rec.saidas.map((x) => nomes[x] || x).join(' → reserva ');
   const usar = el('button', { type: 'button', class: 'btn pequeno' }, 'Usar o recomendado');
   usar.addEventListener('click', () => { usar.disabled = true; gravar(rec.saidas); });
-  const recomendacao = rec.saidas.length ? el('div', { class: `adm-recomendado${segue ? ' segue' : ''}` },
-    el('div', { class: 'adm-recomendado-topo' },
-      el('span', { class: 'adm-recomendado-selo' }, segue ? '✓ Recomendado' : 'Recomendado'),
-      el('strong', {}, recTexto)),
-    rec.motivo ? el('p', {}, rec.motivo) : null,
+  const itemRec = (rotulo, idSaida, motivo) => el('div', { class: 'adm-rec-item' },
+    el('div', { class: 'adm-rec-linha' }, el('span', { class: 'adm-rec-rotulo' }, rotulo), el('strong', {}, idSaida ? (nomes[idSaida] || idSaida) : 'Nenhuma')),
+    motivo ? el('p', {}, motivo) : null);
+  const recomendacao = rec.saida ? el('div', { class: `adm-recomendado${segue ? ' segue' : ''}` },
+    el('span', { class: 'adm-recomendado-selo' }, segue ? '✓ Segue o recomendado' : 'Recomendado'),
+    itemRec('Saída', rec.saida.id, rec.saida.motivo),
+    itemRec('Reserva', rec.reserva?.id, rec.reserva?.motivo),
     segue ? null : usar) : null;
   return el('div', { class: 'adm-saidas' },
     el('div', { class: 'adm-saidas-topo' }, el('span', { class: 'rotulo' }, 'Por onde pesquisa'),
@@ -1187,11 +1258,20 @@ function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
 }
 
 // Tabela que vira cartões no celular (cada célula leva o nome da coluna em data-rotulo).
-function tabelaAdmin(colunas, linhas, vazio) {
+// links[i]: endereço aberto ao clicar na linha i (opcional).
+function tabelaAdmin(colunas, linhas, vazio, links = []) {
   if (!linhas.length) return el('p', { class: 'vazio' }, vazio);
   return el('div', { class: 'tabela-rolagem' }, el('table', { class: 'adm-tabela' },
     el('thead', {}, el('tr', {}, ...colunas.map((c) => el('th', { class: c.num ? 'num' : null }, c.nome)))),
-    el('tbody', {}, ...linhas.map((l) => el('tr', {}, ...colunas.map((c, i) => el('td', { 'data-rotulo': c.nome, class: c.num ? 'num' : null }, l[i])))))));
+    el('tbody', {}, ...linhas.map((l, k) => {
+      const tr = el('tr', links[k] ? { class: 'clicavel', tabindex: '0', role: 'link', 'aria-label': 'Ver detalhes do alerta' } : {},
+        ...colunas.map((c, i) => el('td', { 'data-rotulo': c.nome, class: c.num ? 'num' : null }, l[i])));
+      if (links[k]) {
+        tr.addEventListener('click', (ev) => { if (!ev.target.closest('a, button')) ir(links[k]); });
+        tr.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ir(links[k]); });
+      }
+      return tr;
+    }))));
 }
 
 function desenharAlertasAdmin(caixa, alertas) {
@@ -1199,17 +1279,18 @@ function desenharAlertasAdmin(caixa, alertas) {
     [{ nome: 'Usuário' }, { nome: 'Rota' }, { nome: 'Datas' }, { nome: 'Regra' }, { nome: 'Última consulta' }, { nome: 'Total', num: true }],
     alertas.map((x) => {
       const a = x.alerta;
-      const cmp = comparacao(x.ultima, x.media);
+      const cmp = comparacao(x.ultima, x.media, x.sem_voos);
       return [
         x.usuario || '—',
         el('span', { class: 'adm-rota' }, el('strong', {}, titulo(a)), el('small', {}, `${cidades(a)}${a.nome ? ` · ${a.nome}` : ''}`)),
         datasTexto(a),
         `${a.so_diretos === false ? 'Com escalas' : 'Só diretos'} · ${Math.round(a.desconto_min * 100)} % · a cada ${rotuloIntervalo(a.intervalo_min)}`,
         x.ultima ? dataHora(x.ultima.ts) : 'ainda não',
-        el('span', { class: 'adm-total' }, el('strong', {}, x.ultima ? brl(x.ultima.total) : '—'), x.ultima ? el('span', { class: `variacao ${cmp.classe}` }, cmp.texto) : null),
+        el('span', { class: 'adm-total' }, el('strong', {}, x.ultima ? brl(x.ultima.total) : '—'), x.ultima || x.sem_voos ? el('span', { class: `variacao ${cmp.classe}` }, cmp.texto) : null),
       ];
     }),
-    'Nenhum alerta ligado.'));
+    'Nenhum alerta ligado.',
+    alertas.map((x) => `#/admin/alertas/${x.alerta.id}`)));
 }
 
 function desenharUsuariosAdmin(caixa, usuarios) {
@@ -1308,7 +1389,10 @@ async function rota() {
   const novo = h.match(/^#\/novo\/([0-9a-f]{24})$/);
   if (novo) return telaNovo(novo[1]);
   if (h === '#/conta') return telaConta();
-  if (h === '#/admin') return telaAdmin();
+  const adm = h.match(/^#\/admin(?:\/(sites|alertas|usuarios))?$/);
+  if (adm) return telaAdmin(adm[1] === 'sites' ? 'fontes' : adm[1] || 'geral');
+  const admAlerta = h.match(/^#\/admin\/alertas\/([0-9a-f]{24})$/);
+  if (admAlerta) return telaDetalhe(admAlerta[1], { comoAdmin: true });
   const m = h.match(/^#\/alertas\/([0-9a-f]{24})$/);
   if (m) return telaDetalhe(m[1]);
   return telaAlertas();

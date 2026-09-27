@@ -431,10 +431,12 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-saidas .msg:empty { display: none; }
 .adm-recomendado { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px dashed color-mix(in srgb, var(--primaria) 45%, var(--borda)); background: var(--primaria-suave); }
 .adm-recomendado.segue { border-style: solid; border-color: color-mix(in srgb, var(--verde) 40%, var(--borda)); background: color-mix(in srgb, var(--verde) 9%, transparent); }
-.adm-recomendado-topo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .84rem; }
 .adm-recomendado-selo { font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primaria); }
 .adm-recomendado.segue .adm-recomendado-selo { color: var(--verde); }
 .adm-recomendado p { margin: 0; font-size: .78rem; color: var(--suave); }
+.adm-rec-item { display: grid; gap: 2px; }
+.adm-rec-linha { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: .84rem; }
+.adm-rec-rotulo { min-width: 58px; color: var(--suave); }
 .adm-recomendado .btn { justify-self: start; }
 
 .tabela-rolagem { overflow-x: auto; }
@@ -748,3 +750,20 @@ body:not(.admin) [data-so-admin] { display: none; }
   .marca-logo { width: 32px; height: 32px; }
   .datas { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Alerta sem voos */
+.variacao.sem-voos { color: var(--amarelo); background: color-mix(in srgb, var(--amarelo) 13%, transparent); white-space: normal; }
+.aviso-sem-voos {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; padding: 16px 18px; border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--amarelo) 40%, var(--borda)); background: color-mix(in srgb, var(--amarelo) 8%, var(--card));
+}
+.aviso-sem-voos-icone { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; color: var(--amarelo); background: color-mix(in srgb, var(--amarelo) 16%, transparent); }
+.aviso-sem-voos-icone svg { width: 20px; height: 20px; }
+.aviso-sem-voos-texto { display: grid; gap: 6px; min-width: 0; }
+.aviso-sem-voos-texto p { margin: 0; color: var(--suave); font-size: .9rem; }
+.aviso-sem-voos-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.det-dono { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; font-size: .88rem; color: var(--suave); }
+.adm-tabela tr.clicavel { cursor: pointer; }
+.adm-tabela tr.clicavel:focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }
+.adm-tabela tr.clicavel td:last-child::after { content: "›"; margin-left: 10px; color: var(--suave); font-size: 1.1rem; }
+@media (max-width: 700px) { .adm-tabela tr.clicavel td:last-child::after { content: none; } }
