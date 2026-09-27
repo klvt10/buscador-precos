@@ -611,6 +611,199 @@ const rotuloIntervalo = (m) => (m < 60 ? `${m} min` : m === 1440 ? '1 dia' : m %
 const noitesEntre = (ida, volta) => Math.round((new Date(`${volta}T12:00:00`) - new Date(`${ida}T12:00:00`)) / 864e5);
 const textoNoites = (n) => (n === 0 ? 'bate e volta' : `${n} ${n === 1 ? 'noite' : 'noites'}`);
 
+// --- Campo de data (dd/mm/aaaa + calendário em português) ---------------------------------------
+// O campo nativo segue o idioma do navegador (mm/dd em inglês); este é sempre brasileiro.
+// A data fica em ISO no input escondido (name=data_ida/data_volta), que recebe 'change' ao mudar.
+
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const SEMANA_LONGA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const isoDe = (a, m, d) => `${a}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+const partes = (iso) => iso.split('-').map(Number); // [ano, mês 1-12, dia]
+const somaDias = (iso, n) => { const [a, m, d] = partes(iso); const x = new Date(Date.UTC(a, m - 1, d + n)); return x.toISOString().slice(0, 10); };
+const brDe = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '');
+function isoDeBr(txt) {
+  const m = txt.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const iso = `${m[3]}-${m[2]}-${m[1]}`;
+  const [a, mm, d] = partes(iso);
+  const x = new Date(Date.UTC(a, mm - 1, d));
+  return x.getUTCFullYear() === a && x.getUTCMonth() === mm - 1 && x.getUTCDate() === d ? iso : null;
+}
+
+let idData = 0;
+
+// caixa: .campo-data com o input escondido; faixa(): [ida, volta] para destacar o período.
+function campoData(caixa, { rotulo, faixa }) {
+  const oculto = $('input[type=hidden]', caixa);
+  const dia = $('.campo-data-dia', caixa);
+  const n = ++idData;
+  const entrada = el('input', {
+    type: 'text', class: 'data-entrada', id: `data-${n}`, inputmode: 'numeric', autocomplete: 'off',
+    placeholder: 'dd/mm/aaaa', maxlength: '10', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-describedby': `data-${n}-dia`,
+  });
+  const botao = el('button', { type: 'button', class: 'data-abrir', 'aria-label': `Abrir calendário: ${rotulo}`, tabindex: '-1' }, icone('calendario'));
+  const cal = el('div', { class: 'calendario', role: 'dialog', 'aria-label': `Calendário: ${rotulo}`, hidden: '' });
+  dia.id = `data-${n}-dia`;
+  $('.rotulo', caixa).replaceWith(el('label', { class: 'rotulo', for: entrada.id }, rotulo));
+  oculto.before(el('div', { class: 'data-caixa' }, entrada, botao, cal));
+
+  let mes = null; // [ano, mês 0-11] exibido
+  let erroAtual = null; // texto digitado inválido: fica na tela com a mensagem até ser corrigido
+  let foco = null; // ISO com o foco no calendário
+  const limites = () => [oculto.min || hojeISO(), oculto.max || somaDias(hojeISO(), 365)];
+  const valido = (iso) => { const [ini, fim] = limites(); return iso >= ini && iso <= fim; };
+
+  const mostrar = (msg) => {
+    const v = oculto.value;
+    dia.className = `campo-data-dia${msg ? ' erro' : ''}`;
+    dia.textContent = msg || (v ? diaSemana(v) : '');
+    entrada.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  };
+  const definir = (iso, { avisar = true } = {}) => {
+    erroAtual = null;
+    oculto.value = iso || '';
+    entrada.value = brDe(iso);
+    mostrar();
+    if (avisar) oculto.dispatchEvent(new Event('change'));
+  };
+
+  const desenhar = () => {
+    const [ini, fim] = limites();
+    const [a, m] = mes;
+    const [fi, fv] = faixa ? faixa() : [null, null];
+    const primeiro = new Date(Date.UTC(a, m, 1)).getUTCDay();
+    const diasNoMes = new Date(Date.UTC(a, m + 1, 0)).getUTCDate();
+    const hoje = hojeISO();
+    const antes = el('button', { type: 'button', class: 'cal-nav', 'aria-label': 'Mês anterior' }, '‹');
+    const depois = el('button', { type: 'button', class: 'cal-nav', 'aria-label': 'Próximo mês' }, '›');
+    antes.disabled = isoDe(a, m, 1) <= ini.slice(0, 8) + '01';
+    depois.disabled = isoDe(a, m, diasNoMes) >= fim;
+    antes.addEventListener('click', () => mudarMes(-1));
+    depois.addEventListener('click', () => mudarMes(1));
+    const grade = el('div', { class: 'cal-grade', role: 'grid' });
+    for (const s of SEMANA) grade.append(el('span', { class: 'cal-semana', 'aria-hidden': 'true' }, s));
+    for (let i = 0; i < primeiro; i++) grade.append(el('span', { class: 'cal-vazio' }));
+    for (let d = 1; d <= diasNoMes; d++) {
+      const iso = isoDe(a, m, d);
+      const cls = ['cal-dia'];
+      if (iso === hoje) cls.push('hoje');
+      if (iso === oculto.value) cls.push('escolhido');
+      if (fi && fv && iso > fi && iso < fv) cls.push('entre');
+      if (iso === fi && fv) cls.push('inicio');
+      if (iso === fv && fi) cls.push('fim');
+      const b = el('button', {
+        type: 'button', class: cls.join(' '), 'data-iso': iso, role: 'gridcell', tabindex: iso === foco ? '0' : '-1',
+        'aria-label': `${d} de ${MESES[m]} de ${a}, ${SEMANA_LONGA[new Date(`${iso}T12:00:00`).getDay()]}`,
+        'aria-selected': iso === oculto.value ? 'true' : 'false',
+      }, String(d));
+      b.disabled = iso < ini || iso > fim;
+      b.addEventListener('click', () => escolher(iso));
+      grade.append(b);
+    }
+    cal.replaceChildren(
+      el('div', { class: 'cal-topo' }, antes, el('strong', { 'aria-live': 'polite' }, `${MESES[m]} de ${a}`), depois),
+      grade,
+      el('p', { class: 'cal-rodape' }, `Datas de ${brDe(ini)} a ${brDe(fim)}`));
+  };
+  const focarDia = () => $(`[data-iso="${foco}"]`, cal)?.focus();
+  const irPara = (iso) => {
+    const [ini, fim] = limites();
+    iso = iso < ini ? ini : iso > fim ? fim : iso;
+    foco = iso;
+    const [a, m] = partes(iso);
+    mes = [a, m - 1];
+    desenhar();
+    focarDia();
+  };
+  const mudarMes = (k) => {
+    let [a, m] = mes;
+    m += k;
+    if (m < 0) { m = 11; a -= 1; } else if (m > 11) { m = 0; a += 1; }
+    mes = [a, m];
+    const [, , d] = partes(foco || isoDe(a, m, 1));
+    const ultimo = new Date(Date.UTC(a, m + 1, 0)).getUTCDate();
+    foco = isoDe(a, m, Math.min(d, ultimo));
+    desenhar();
+  };
+  const abrir = () => {
+    if (!cal.hidden) return;
+    const [ini] = limites();
+    foco = oculto.value && valido(oculto.value) ? oculto.value : (faixa && faixa()[0] && faixa()[0] >= ini ? faixa()[0] : ini);
+    const [a, m] = partes(foco);
+    mes = [a, m - 1];
+    desenhar();
+    cal.hidden = false;
+    entrada.setAttribute('aria-expanded', 'true');
+  };
+  const fechar = () => { cal.hidden = true; entrada.setAttribute('aria-expanded', 'false'); };
+  const escolher = (iso) => { definir(iso); fechar(); entrada.focus(); };
+
+  // Digitação com máscara: só números, barras automáticas.
+  entrada.addEventListener('input', () => {
+    erroAtual = null;
+    const dig = entrada.value.replace(/\D/g, '').slice(0, 8);
+    entrada.value = [dig.slice(0, 2), dig.slice(2, 4), dig.slice(4)].filter(Boolean).join('/');
+    mostrar();
+    if (dig.length === 8) {
+      const iso = isoDeBr(entrada.value);
+      if (iso && valido(iso)) { definir(iso); if (!cal.hidden) { foco = iso; const [a, m] = partes(iso); mes = [a, m - 1]; desenhar(); } }
+    }
+  });
+  const confirmarTexto = () => {
+    const txt = entrada.value.trim();
+    if (!txt) { if (oculto.value) definir(''); return; }
+    const iso = isoDeBr(txt);
+    const [ini, fim] = limites();
+    const msg = !iso ? 'Data inválida. Use dd/mm/aaaa.'
+      : iso < ini ? `A data precisa ser a partir de ${brDe(ini)}.`
+        : iso > fim ? `A data pode ser até ${brDe(fim)}.` : null;
+    if (msg) {
+      // Data inválida não deixa a anterior valendo por baixo: limpa o valor e mantém o texto e o aviso.
+      erroAtual = msg;
+      if (oculto.value) { oculto.value = ''; oculto.dispatchEvent(new Event('change')); }
+      mostrar(msg);
+      return;
+    }
+    if (iso !== oculto.value) definir(iso);
+  };
+  entrada.addEventListener('focus', abrir);
+  entrada.addEventListener('click', abrir);
+  entrada.addEventListener('blur', () => setTimeout(() => { if (!caixa.contains(document.activeElement)) { fechar(); confirmarTexto(); } }, 0));
+  entrada.addEventListener('keydown', (ev) => {
+    if (ev.key === 'ArrowDown' || (ev.key === 'Enter' && !cal.hidden && !entrada.value)) { ev.preventDefault(); abrir(); focarDia(); }
+    else if (ev.key === 'Enter') { ev.preventDefault(); confirmarTexto(); fechar(); }
+    else if (ev.key === 'Escape') { fechar(); }
+    else if (ev.key === 'Tab') { fechar(); confirmarTexto(); } // sai do campo; o calendário se usa com a seta para baixo
+  });
+  botao.addEventListener('click', () => { if (cal.hidden) { abrir(); focarDia(); } else { fechar(); entrada.focus(); } });
+  cal.addEventListener('mousedown', (ev) => { if (ev.target.closest('button')) ev.preventDefault(); });
+  cal.addEventListener('keydown', (ev) => {
+    const passos = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    if (passos[ev.key] && foco) { ev.preventDefault(); irPara(somaDias(foco, passos[ev.key])); }
+    else if (ev.key === 'PageUp' || ev.key === 'PageDown') { ev.preventDefault(); mudarMes(ev.key === 'PageUp' ? -1 : 1); focarDia(); }
+    else if (ev.key === 'Home' || ev.key === 'End') {
+      ev.preventDefault();
+      const dsem = new Date(`${foco}T12:00:00`).getDay();
+      irPara(somaDias(foco, ev.key === 'Home' ? -dsem : 6 - dsem));
+    } else if (ev.key === 'Escape') { ev.preventDefault(); fechar(); entrada.focus(); }
+  });
+  cal.addEventListener('focusout', () => setTimeout(() => { if (!caixa.contains(document.activeElement)) fechar(); }, 0));
+  document.addEventListener('mousedown', (ev) => { if (!caixa.contains(ev.target)) fechar(); }, { signal: sinalTela.signal });
+
+  return {
+    // O formulário mudou o valor ou o mínimo por código: atualiza o texto (e o calendário aberto).
+    sincronizar: () => {
+      if (erroAtual) mostrar(erroAtual);
+      else if (document.activeElement !== entrada) { entrada.value = brDe(oculto.value); mostrar(); }
+      if (!cal.hidden) desenhar();
+    },
+    abrir: () => { entrada.focus(); abrir(); },
+    focar: () => entrada.focus(),
+    erro: (msg) => { erroAtual = msg; mostrar(msg); },
+  };
+}
+
 // base: alerta existente (edição) ou modelo para um alerta novo (duplicar).
 function formAlerta(lugar, alerta, base = alerta) {
   lugar.replaceChildren($('#t-form-alerta').content.cloneNode(true));
@@ -621,6 +814,9 @@ function formAlerta(lugar, alerta, base = alerta) {
   const destino = campoAeroporto($('[data-aeroporto="destino"]', f), { rotulo: 'Para onde', aoEscolher: () => atualizar() });
   const voltaCaixa = $('[data-volta]', f);
   let voltaGuardada = '';
+  const faixaDatas = () => [f.data_ida.value || null, f.data_volta.value || null];
+  const dataIda = campoData($('[data-campo-data="ida"]', f), { rotulo: 'Ida', faixa: faixaDatas });
+  const dataVolta = campoData($('[data-campo-data="volta"]', f), { rotulo: 'Volta', faixa: faixaDatas });
 
   const soIda = () => f.tipo.value === 'so-ida';
   const soDiretos = () => f.voos.value === 'diretos';
@@ -642,8 +838,8 @@ function formAlerta(lugar, alerta, base = alerta) {
     if (ida && f.data_volta.value && f.data_volta.value < ida) f.data_volta.value = '';
     voltaCaixa.hidden = soIda();
     f.data_volta.required = !soIda();
-    $('[data-dia="ida"]', f).textContent = ida ? diaSemana(ida) : '';
-    $('[data-dia="volta"]', f).textContent = f.data_volta.value ? diaSemana(f.data_volta.value) : '';
+    dataIda.sincronizar();
+    dataVolta.sincronizar();
     const noites = !soIda() && ida && f.data_volta.value ? noitesEntre(ida, f.data_volta.value) : null;
     const selo = $('[data-noites]', f);
     selo.hidden = noites == null;
@@ -687,7 +883,7 @@ function formAlerta(lugar, alerta, base = alerta) {
   for (const c of [...f.querySelectorAll('input[name="voos"]'), f.desconto_pct, f.ativo]) c.addEventListener('input', atualizar);
   // Ida escolhida e volta vazia: já abre a volta.
   f.data_ida.addEventListener('change', () => {
-    if (!soIda() && f.data_ida.value && !f.data_volta.value) { f.data_volta.focus(); try { f.data_volta.showPicker(); } catch { /* navegador sem showPicker */ } }
+    if (!soIda() && f.data_ida.value && !f.data_volta.value) setTimeout(() => dataVolta.abrir(), 0);
   });
   $('[data-trocar]', f).addEventListener('click', (ev) => {
     const o = origem.valor;
@@ -740,8 +936,8 @@ function formAlerta(lugar, alerta, base = alerta) {
     if (!destino.valor) { destino.erro('Escolha o destino na lista.'); problemas.push(destino); }
     if (origem.valor && origem.valor === destino.valor) { destino.erro('Destino igual à origem.'); problemas.push(destino); }
     if (problemas.length) { problemas[0].focar(); return; }
-    if (!f.data_ida.value) { f.data_ida.focus(); f.data_ida.reportValidity(); return; }
-    if (!soIda() && !f.data_volta.value) { f.data_volta.focus(); f.data_volta.reportValidity(); return; }
+    if (!f.data_ida.value) { dataIda.erro('Escolha a data da ida.'); dataIda.focar(); return; }
+    if (!soIda() && !f.data_volta.value) { dataVolta.erro('Escolha a data da volta.'); dataVolta.focar(); return; }
     const body = {
       nome: f.nome.value,
       origem: origem.valor,
@@ -978,7 +1174,7 @@ function desenharSemVoos(t, dados, comoAdmin, id) {
   }
   if (!comoAdmin) {
     const d = el('button', { type: 'button', class: 'btn' }, icone('calendario'), 'Trocar as datas');
-    d.addEventListener('click', () => { const f = $('[data-form-lugar]', t); f.scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('input[name=data_ida]', f)?.focus(), 400); });
+    d.addEventListener('click', () => { const f = $('[data-form-lugar]', t); f.scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('.data-entrada', f)?.focus(), 400); });
     acoes.push(d);
   }
   const quando = `${sv.origem} → ${sv.destino} em ${dataCompacta(sv.data)}`;

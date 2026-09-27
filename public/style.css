@@ -637,7 +637,46 @@ body:not(.admin) [data-so-admin] { display: none; }
   color-scheme: light dark; transition: border-color .15s, background .15s, box-shadow .15s;
 }
 .campo-data input:focus { outline: none; background: var(--card); border-color: var(--primaria); box-shadow: 0 0 0 3px var(--primaria-suave); }
-.campo-data-dia { min-height: 1.2em; font-size: .78rem; color: var(--suave); text-transform: capitalize; }
+.campo-data { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.campo-data-dia { min-height: 1.2em; font-size: .78rem; color: var(--suave); }
+.campo-data-dia:first-letter { text-transform: uppercase; }
+.campo-data-dia.erro { color: var(--vermelho); }
+.data-caixa { position: relative; }
+.data-caixa .data-entrada { width: 100%; padding-right: 48px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.data-abrir {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
+  width: 38px; height: 38px; border: 0; border-radius: 9px; background: none; color: var(--suave); cursor: pointer;
+}
+.data-abrir:hover { color: var(--primaria); background: var(--primaria-suave); }
+.data-abrir .ic { width: 19px; height: 19px; }
+.calendario {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: 300px; max-width: calc(100vw - 32px);
+  padding: 12px; background: var(--card); border: 1px solid var(--borda); border-radius: 14px; box-shadow: var(--sombra);
+}
+[data-campo-data="volta"] .calendario { left: auto; right: 0; }
+.cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cal-topo strong { font-size: .95rem; }
+.cal-topo strong:first-letter { text-transform: uppercase; }
+.cal-nav { width: 34px; height: 34px; border: 1px solid var(--borda); border-radius: 9px; background: var(--card); color: var(--texto); font-size: 1.2rem; line-height: 1; cursor: pointer; }
+.cal-nav:hover:not(:disabled) { border-color: var(--primaria); color: var(--primaria); }
+.cal-nav:disabled { opacity: .35; cursor: default; }
+.cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-semana { display: grid; place-items: center; height: 28px; font-size: .72rem; font-weight: 700; color: var(--suave); }
+.cal-dia {
+  height: 36px; border: 0; border-radius: 9px; background: none; color: var(--texto); font: inherit; font-size: .9rem;
+  font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.cal-dia:hover:not(:disabled) { background: var(--primaria-suave); }
+.cal-dia:focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }
+.cal-dia:disabled { color: var(--suave); opacity: .35; cursor: default; }
+.cal-dia.hoje { font-weight: 700; box-shadow: inset 0 0 0 1px var(--borda); }
+.cal-dia.entre { background: var(--primaria-suave); border-radius: 0; }
+.cal-dia.inicio, .cal-dia.fim { background: color-mix(in srgb, var(--primaria) 30%, transparent); }
+.cal-dia.escolhido { background: var(--primaria); color: var(--primaria-texto); font-weight: 700; }
+.cal-rodape { margin: 8px 0 0; font-size: .72rem; color: var(--suave); text-align: center; }
+@media (max-width: 600px) {
+  .calendario, [data-campo-data="volta"] .calendario { width: min(300px, calc(100vw - 32px)); }
+}
 
 /* Aviso: faixa de desconto, intervalo, nome e interruptor */
 .fa-desconto { display: grid; gap: 8px; }
