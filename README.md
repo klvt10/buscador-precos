@@ -16,6 +16,7 @@ https://pedro.tradehunter.com.br/passagens/. Conversa com o backend (Rust, outro
 | `#/novo` | novo alerta: ida e volta ou só ida, só diretos ou com escalas, origem e destino com busca (cidade, aeroporto, país ou código; agrupada por país, Brasil primeiro), datas, % abaixo da média, intervalo (mín. 5 min) |
 | `#/novo/<id>` | novo alerta partindo de outro (Duplicar): mesma rota, datas e regra |
 | `#/alertas/<id>` | gráfico do total com média móvel de 7 dias e gatilho, voos mais baratos, estado das fontes, edição |
+| `#/admin` | administração (só admin): estado do serviço de pesquisa |
 | `#/conta` | nome, troca de senha, sair de todos os aparelhos, apagar conta |
 
 A lista de aeroportos vem do backend (`/passagens/api/aeroportos`) uma vez por sessão.

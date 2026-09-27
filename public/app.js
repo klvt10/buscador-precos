@@ -106,7 +106,8 @@ function montar(id) {
   const tela = $('#tela');
   tela.replaceChildren($(`#${id}`).content.cloneNode(true));
   document.body.classList.toggle('logado', !!usuario);
-  const secao = location.hash.startsWith('#/conta') ? 'conta' : 'alertas';
+  document.body.classList.toggle('admin', !!usuario?.admin);
+  const secao = location.hash.startsWith('#/conta') ? 'conta' : location.hash.startsWith('#/admin') ? 'admin' : 'alertas';
   for (const a of $$('[data-nav]')) {
     if (a.dataset.nav === secao) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
@@ -1014,16 +1015,17 @@ async function telaConta() {
       ir('#/cadastro');
     });
   });
-  // Operação: só existe na página de conta de administrador (o backend também só responde a admin).
-  if (usuario.admin) {
-    const painel = el('section', { class: 'painel operacao', 'aria-labelledby': 'op-titulo' });
-    $('[data-admin-lugar]', t).replaceWith(painel);
-    const mostrar = async () => desenharOperacao(painel, await api('admin/estado'));
-    await mostrar().catch((e) => painel.replaceChildren(el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota erro' }, e.message)));
-    atualizar = setInterval(() => mostrar().catch(() => {}), 10e3);
-  } else {
-    $('[data-admin-lugar]', t).remove();
-  }
+}
+
+// --- Administração ------------------------------------------------------------------------------
+// Só admin chega aqui; o backend também só responde admin/estado a admin (404 para os demais).
+async function telaAdmin() {
+  if (!usuario.admin) return ir('#/alertas');
+  const t = montar('t-admin');
+  const painel = $('[data-operacao]', t);
+  const mostrar = async () => desenharOperacao(painel, await api('admin/estado'));
+  await mostrar().catch((e) => painel.replaceChildren(el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota erro' }, e.message)));
+  atualizar = setInterval(() => mostrar().catch(() => {}), 10e3);
 }
 
 const duracao = (s) => {
@@ -1067,7 +1069,7 @@ function desenharOperacao(painel, e) {
 
   painel.replaceChildren(
     el('div', { class: 'painel-topo' },
-      el('div', {}, el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota' }, 'Visível só para administradores.')),
+      el('div', {}, el('h2', { id: 'op-titulo' }, 'Operação'), el('p', { class: 'nota' }, 'Atualiza a cada 10 segundos.')),
       el('span', { class: 'chip' }, icone('relogio'), `Atualizado às ${new Date().toLocaleTimeString('pt-BR')}`)),
     el('div', { class: 'op-numeros' },
       numero('Usuários', String(e.usuarios ?? '—'), 'com WhatsApp confirmado'),
@@ -1106,6 +1108,7 @@ async function rota() {
   const novo = h.match(/^#\/novo\/([0-9a-f]{24})$/);
   if (novo) return telaNovo(novo[1]);
   if (h === '#/conta') return telaConta();
+  if (h === '#/admin') return telaAdmin();
   const m = h.match(/^#\/alertas\/([0-9a-f]{24})$/);
   if (m) return telaDetalhe(m[1]);
   return telaAlertas();

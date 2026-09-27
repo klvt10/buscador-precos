@@ -7,7 +7,7 @@
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
   <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=03faae15c4">
+  <link rel="stylesheet" href="style.css?v=1608c0ebf1">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -29,6 +29,7 @@
     <symbol id="i-tendencia" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
     <symbol id="i-alvo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></g></symbol>
     <symbol id="i-trofeu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></symbol>
+    <symbol id="i-sair" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
     <symbol id="i-zap" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.5z"/></symbol>
   </svg>
 
@@ -41,12 +42,13 @@
       <nav class="barra-nav" data-so-logado>
         <a href="#/alertas" data-nav="alertas">Alertas</a>
         <a href="#/conta" data-nav="conta">Conta</a>
+        <a href="#/admin" data-nav="admin" data-so-admin aria-label="Administração"><span class="nav-longo">Administração</span><span class="nav-curto" aria-hidden="true">Admin</span></a>
       </nav>
       <div class="barra-acoes">
         <button type="button" class="icone-btn" data-tema-botao aria-label="Mudar para o tema escuro" title="Mudar para o tema escuro">
           <svg class="so-claro"><use href="#i-lua"/></svg><svg class="so-escuro"><use href="#i-sol"/></svg>
         </button>
-        <button type="button" class="btn fantasma pequeno" id="btn-sair" data-so-logado>Sair</button>
+        <button type="button" class="btn fantasma pequeno" id="btn-sair" data-so-logado aria-label="Sair" title="Sair"><svg class="ic nav-curto" aria-hidden="true"><use href="#i-sair"/></svg><span class="nav-longo">Sair</span></button>
       </div>
     </div>
   </header>
@@ -348,6 +350,14 @@
     </section>
   </template>
 
+  <!-- Administração (só admin) -->
+  <template id="t-admin">
+    <section class="conteudo">
+      <div class="topo"><div><h1>Administração</h1><p class="sub">Estado do serviço de pesquisa. Página e dados só para administradores.</p></div></div>
+      <section class="painel operacao" aria-labelledby="op-titulo" data-operacao></section>
+    </section>
+  </template>
+
   <!-- Conta -->
   <template id="t-conta">
     <section class="conteudo estreito">
@@ -378,7 +388,6 @@
         <p class="nota">Sai deste e de todos os outros aparelhos. O próximo acesso pede código no WhatsApp.</p>
         <div class="linha-botao"><button class="btn" data-sair-todos>Sair de todos os aparelhos</button></div>
       </div>
-      <div data-admin-lugar></div>
       <form class="painel perigo" data-form="apagar">
         <h2>Apagar conta</h2>
         <p class="nota">Apaga a conta, os alertas e o histórico. Não tem volta.</p>
@@ -390,6 +399,6 @@
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=9c5c3bb478"></script>
+  <script src="app.js?v=c50e677cbb"></script>
 </body>
 </html>
