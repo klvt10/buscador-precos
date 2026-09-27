@@ -1028,9 +1028,11 @@ async function telaAdmin() {
   const carregar = {
     geral: async () => desenharOperacao($('[data-operacao]', t), await api('admin/estado')),
     fontes: async () => {
-      const { fontes: lista } = await api('admin/fontes');
+      const { fontes: lista, saidas } = await api('admin/fontes');
       n('fontes', `${lista.filter((f) => f.ligada).length}/${lista.length}`);
-      desenharFontesAdmin($('[data-fontes-lista]', t), lista, () => carregar.fontes());
+      // Não redesenha com um seletor aberto ou em uso (a atualização a cada 10 s tiraria a escolha da mão).
+      if ($('[data-fontes-lista] select:focus', t)) return;
+      desenharFontesAdmin($('[data-fontes-lista]', t), lista, saidas, () => carregar.fontes());
     },
     alertas: async () => {
       const [{ alertas }] = await Promise.all([api('admin/alertas'), carregarAeroportos().catch(() => null)]);
@@ -1069,7 +1071,59 @@ async function telaAdmin() {
 
 const dataHoraCurta = (ms) => (ms ? dataHora(ms) : '—');
 
-function desenharFontesAdmin(caixa, lista, recarregar) {
+// Seletores de saída e reserva de um site; grava ao mudar qualquer um.
+function escolhaSaidas(f, saidas, recarregar) {
+  const nomes = Object.fromEntries(saidas.map((s) => [s.id, s.nome]));
+  const opcoes = (sel, vazio) => [
+    vazio ? el('option', { value: '' }, 'Nenhuma') : null,
+    ...saidas.map((s) => {
+      const o = el('option', { value: s.id }, s.configurada ? s.nome : `${s.nome} · não configurada`);
+      o.disabled = !s.configurada;
+      o.selected = s.id === sel;
+      return o;
+    }),
+  ];
+  const principal = el('select', { 'aria-label': `Saída de ${f.nome}` }, ...opcoes(f.saidas[0], false));
+  const reserva = el('select', { 'aria-label': `Reserva de ${f.nome}` }, ...opcoes(f.saidas[1] || '', true));
+  if (!f.saidas[1]) reserva.value = '';
+  const aviso = el('p', { class: 'adm-saida-aviso' });
+  const msg = el('span', { class: 'msg', role: 'status' });
+  const padrao = JSON.stringify(f.saidas) === JSON.stringify(f.saidas_padrao);
+  const avisar = () => {
+    const usa = [principal.value, reserva.value];
+    aviso.hidden = !usa.includes('residencial');
+    aviso.textContent = 'Proxy residencial é cobrado por GB e entra no teto diário. Nos sites de navegador o consumo é medido; nos demais, não.';
+  };
+  const gravar = async () => {
+    const lista = [principal.value, reserva.value].filter(Boolean);
+    if (lista.length === 2 && lista[0] === lista[1]) { msg.className = 'msg erro'; msg.textContent = 'A reserva precisa ser outra saída.'; return; }
+    principal.disabled = reserva.disabled = true;
+    msg.className = 'msg';
+    msg.textContent = 'Gravando…';
+    try {
+      await api(`admin/fontes/${f.fonte}/saidas`, { method: 'PUT', body: { saidas: lista } });
+      msg.className = 'msg ok';
+      msg.textContent = 'Gravado. Vale a partir da próxima pesquisa.';
+      setTimeout(() => recarregar().catch(() => {}), 1200);
+    } catch (e) {
+      msg.className = 'msg erro';
+      msg.textContent = e.message;
+      principal.disabled = reserva.disabled = false;
+    }
+  };
+  principal.addEventListener('change', () => { avisar(); gravar(); });
+  reserva.addEventListener('change', () => { avisar(); gravar(); });
+  avisar();
+  return el('div', { class: 'adm-saidas' },
+    el('div', { class: 'adm-saidas-topo' }, el('span', { class: 'rotulo' }, 'Por onde pesquisa'),
+      el('span', { class: 'nota' }, padrao ? 'padrão do site' : `padrão: ${f.saidas_padrao.map((x) => nomes[x] || x).join(' → ')}`)),
+    el('label', { class: 'adm-saida' }, el('span', {}, 'Saída'), principal),
+    el('label', { class: 'adm-saida' }, el('span', {}, 'Reserva'), reserva),
+    el('p', { class: 'nota' }, 'A reserva é usada quando a saída falha na mesma pesquisa.'),
+    aviso, msg);
+}
+
+function desenharFontesAdmin(caixa, lista, saidas, recarregar) {
   caixa.replaceChildren(...lista.map((f) => {
     let estado = 'ok';
     let texto = 'Funcionando';
@@ -1112,9 +1166,9 @@ function desenharFontesAdmin(caixa, lista, recarregar) {
         linha('Tempo médio', f.ms_medio != null ? `${(f.ms_medio / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s` : '—'),
         linha('Último sucesso', dataHoraCurta(f.ultimo_ok)),
         linha('Última falha', dataHoraCurta(f.ultima_falha)),
-        f.mb_24h ? linha('Proxy pago (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null,
-        linha('Saída', f.saida)),
+        f.mb_24h ? linha('Tráfego no navegador (24 h)', `${f.mb_24h.toLocaleString('pt-BR')} MB`) : null),
       f.ultimo_erro ? el('p', { class: 'adm-fonte-erro' }, el('strong', {}, 'Último erro: '), f.ultimo_erro) : null,
+      escolhaSaidas(f, saidas, recarregar),
       msg);
   }));
 }

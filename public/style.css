@@ -416,6 +416,19 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-fonte-dados dd { margin: 0; text-align: right; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
 .adm-fonte-erro { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .8rem; color: var(--suave); background: var(--fundo); overflow-wrap: anywhere; }
 .adm-fonte .msg:empty { display: none; }
+.adm-saidas { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.adm-saidas-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.adm-saidas-topo .nota { font-size: .75rem; }
+.adm-saida { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 8px; font-size: .84rem; }
+.adm-saida select {
+  width: 100%; min-width: 0; height: 38px; padding: 0 30px 0 10px; font: inherit; font-size: .88rem; color: var(--texto);
+  background: var(--fundo); border: 1px solid var(--borda); border-radius: 10px; cursor: pointer;
+}
+.adm-saida select:focus { outline: none; border-color: var(--primaria); box-shadow: 0 0 0 3px var(--primaria-suave); }
+.adm-saida select:disabled { opacity: .6; cursor: default; }
+.adm-saidas .nota { font-size: .75rem; }
+.adm-saida-aviso { margin: 0; padding: 8px 10px; border-radius: 10px; font-size: .78rem; color: var(--amarelo); background: color-mix(in srgb, var(--amarelo) 12%, transparent); }
+.adm-saidas .msg:empty { display: none; }
 
 .tabela-rolagem { overflow-x: auto; }
 .adm-tabela { width: 100%; border-collapse: collapse; font-size: .88rem; }
