@@ -5,75 +5,134 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Buscador de Passagens</title>
-  <link rel="stylesheet" href="style.css?v=35c1f54cdf">
+  <meta name="color-scheme" content="light dark">
+  <script src="tema.js?v=728c87caaf"></script>
+  <link rel="stylesheet" href="style.css?v=dd8a6fc440">
 </head>
 <body>
-  <header class="barra" id="barra" hidden>
-    <a href="#/alertas" class="marca">✈️ Buscador de Passagens</a>
-    <nav>
-      <a href="#/alertas">Alertas</a>
-      <a href="#/conta" id="link-conta">Conta</a>
-      <button class="btn fantasma" id="btn-sair">Sair</button>
-    </nav>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="i-aviao" viewBox="0 0 24 24"><path fill="currentColor" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+    <symbol id="i-lua" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g></symbol>
+    <symbol id="i-copiar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></g></symbol>
+    <symbol id="i-pausa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M9 6v12M15 6v12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.8l-10-6.5A1 1 0 0 0 8 5.5z"/></symbol>
+    <symbol id="i-lixo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-olho" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+    <symbol id="i-calendario" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></g></symbol>
+    <symbol id="i-relogio" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+    <symbol id="i-sino" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a2 2 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-escala" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><path d="M7 12h3M14 12h3"/></g></symbol>
+    <symbol id="i-tendencia" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+    <symbol id="i-alvo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></g></symbol>
+    <symbol id="i-trofeu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.5z"/></symbol>
+  </svg>
+
+  <header class="barra" id="barra">
+    <div class="barra-dentro">
+      <a href="#/alertas" class="marca">
+        <span class="marca-logo"><svg><use href="#i-aviao"/></svg></span>
+        <span class="marca-nome">Buscador de Passagens</span>
+      </a>
+      <nav class="barra-nav" data-so-logado>
+        <a href="#/alertas" data-nav="alertas">Alertas</a>
+        <a href="#/conta" data-nav="conta">Conta</a>
+      </nav>
+      <div class="barra-acoes">
+        <button type="button" class="icone-btn" data-tema-botao aria-label="Mudar para o tema escuro" title="Mudar para o tema escuro">
+          <svg class="so-claro"><use href="#i-lua"/></svg><svg class="so-escuro"><use href="#i-sol"/></svg>
+        </button>
+        <button type="button" class="btn fantasma pequeno" id="btn-sair" data-so-logado>Sair</button>
+      </div>
+    </div>
   </header>
 
   <main id="tela" aria-live="polite"></main>
 
-  <!-- Telas de acesso -->
-  <template id="t-entrar">
+  <!-- Moldura das telas de acesso: apresentação ao lado do formulário -->
+  <template id="t-acesso">
     <section class="acesso">
-      <form class="card form-acesso" data-form="entrar">
-        <h1>Entrar</h1>
-        <label>Celular (WhatsApp) <input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
-        <label>Senha <input name="senha" type="password" autocomplete="current-password" required></label>
-        <label class="check"><input type="checkbox" name="lembrar" checked> Lembrar este aparelho por 30 dias</label>
-        <button class="btn primario" type="submit">Entrar</button>
-        <p class="erro" data-erro role="alert"></p>
-        <p class="links"><a href="#/esqueci">Esqueci a senha</a> · <a href="#/cadastro">Criar conta</a></p>
-      </form>
+      <aside class="acesso-hero">
+        <div class="acesso-hero-dentro">
+          <p class="acesso-selo"><svg><use href="#i-sino"/></svg> Alerta de preço de passagem</p>
+          <h2>O aviso chega no WhatsApp quando a passagem fica barata.</h2>
+          <ul class="acesso-lista">
+            <li><svg><use href="#i-lupa"/></svg><span>Pesquisa em vários sites de passagem, sozinho, no intervalo escolhido.</span></li>
+            <li><svg><use href="#i-tendencia"/></svg><span>Compara o total com a média dos últimos 7 dias.</span></li>
+            <li><svg><use href="#i-zap"/></svg><span>Avisa quando o total cai abaixo do percentual definido.</span></li>
+          </ul>
+          <div class="acesso-bilhete" aria-hidden="true">
+            <div><strong>POA</strong><span>Porto Alegre</span></div>
+            <div class="acesso-bilhete-linha"><svg><use href="#i-aviao"/></svg></div>
+            <div class="fim"><strong>LIS</strong><span>Lisboa</span></div>
+            <p>R$ 3.636 <em>18 % abaixo da média</em></p>
+          </div>
+        </div>
+      </aside>
+      <div class="acesso-form" data-acesso-lugar></div>
     </section>
+  </template>
+
+  <template id="t-entrar">
+    <form class="form-acesso" data-form="entrar">
+      <div class="form-acesso-topo">
+        <h1>Entrar</h1>
+        <p class="sub">Use o celular cadastrado e a senha.</p>
+      </div>
+      <label class="campo"><span class="rotulo">Celular (WhatsApp)</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
+      <label class="campo"><span class="rotulo">Senha</span><span class="campo-senha"><input name="senha" type="password" autocomplete="current-password" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+      <label class="check"><input type="checkbox" name="lembrar" checked> Lembrar este aparelho por 30 dias</label>
+      <button class="btn primario grande" type="submit">Entrar</button>
+      <p class="erro" data-erro role="alert"></p>
+      <p class="links"><a href="#/esqueci">Esqueci a senha</a><span aria-hidden="true">·</span><a href="#/cadastro">Criar conta</a></p>
+    </form>
   </template>
 
   <template id="t-cadastro">
-    <section class="acesso">
-      <form class="card form-acesso" data-form="cadastro">
+    <form class="form-acesso" data-form="cadastro">
+      <div class="form-acesso-topo">
         <h1>Criar conta</h1>
-        <p class="nota">Um código chega no seu WhatsApp para confirmar o número. Os alertas de preço também chegam por lá.</p>
-        <label>Nome <input name="nome" autocomplete="name" maxlength="60" required></label>
-        <label>Celular (WhatsApp) <input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
-        <label>Senha (mín. 8 caracteres) <input name="senha" type="password" autocomplete="new-password" minlength="8" required></label>
-        <button class="btn primario" type="submit">Criar conta</button>
-        <p class="erro" data-erro role="alert"></p>
-        <p class="links">Já tem conta? <a href="#/entrar">Entrar</a></p>
-      </form>
-    </section>
+        <p class="sub">Um código chega no WhatsApp para confirmar o número. Os avisos de preço também chegam por lá.</p>
+      </div>
+      <label class="campo"><span class="rotulo">Nome</span><input name="nome" autocomplete="name" maxlength="60" required></label>
+      <label class="campo"><span class="rotulo">Celular (WhatsApp)</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
+      <label class="campo"><span class="rotulo">Senha <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="senha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+      <button class="btn primario grande" type="submit">Criar conta</button>
+      <p class="erro" data-erro role="alert"></p>
+      <p class="links">Já tem conta? <a href="#/entrar">Entrar</a></p>
+    </form>
   </template>
 
   <template id="t-codigo">
-    <section class="acesso">
-      <form class="card form-acesso" data-form="codigo">
+    <form class="form-acesso" data-form="codigo">
+      <div class="form-acesso-topo">
+        <span class="form-acesso-icone"><svg><use href="#i-zap"/></svg></span>
         <h1>Código do WhatsApp</h1>
-        <p class="nota">Enviado para <strong data-tel></strong>. Vale por 10 minutos.</p>
-        <label>Código de 6 dígitos <input name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" required></label>
-        <label data-nova-senha hidden>Senha nova (mín. 8 caracteres) <input name="senha" type="password" autocomplete="new-password" minlength="8"></label>
-        <button class="btn primario" type="submit">Confirmar</button>
-        <p class="erro" data-erro role="alert"></p>
-        <p class="links"><button type="button" class="link" data-reenviar>Reenviar código</button> · <a href="#/entrar">Voltar</a></p>
-      </form>
-    </section>
+        <p class="sub">Enviado para <strong data-tel></strong>. Vale por 10 minutos.</p>
+      </div>
+      <label class="campo"><span class="rotulo">Código de 6 dígitos</span><input class="entrada-codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" placeholder="000000" required></label>
+      <label class="campo" data-nova-senha hidden><span class="rotulo">Senha nova <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="senha" type="password" autocomplete="new-password" minlength="8"><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+      <button class="btn primario grande" type="submit">Confirmar</button>
+      <p class="erro" data-erro role="alert"></p>
+      <p class="links"><button type="button" class="link" data-reenviar>Reenviar código</button><span aria-hidden="true">·</span><a href="#/entrar">Voltar</a></p>
+    </form>
   </template>
 
   <template id="t-esqueci">
-    <section class="acesso">
-      <form class="card form-acesso" data-form="esqueci">
+    <form class="form-acesso" data-form="esqueci">
+      <div class="form-acesso-topo">
         <h1>Esqueci a senha</h1>
-        <p class="nota">Se houver conta com este número, um código chega no WhatsApp para criar uma senha nova.</p>
-        <label>Celular (WhatsApp) <input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
-        <button class="btn primario" type="submit">Enviar código</button>
-        <p class="erro" data-erro role="alert"></p>
-        <p class="links"><a href="#/entrar">Voltar</a></p>
-      </form>
-    </section>
+        <p class="sub">Se houver conta com este número, um código chega no WhatsApp para criar uma senha nova.</p>
+      </div>
+      <label class="campo"><span class="rotulo">Celular (WhatsApp)</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
+      <button class="btn primario grande" type="submit">Enviar código</button>
+      <p class="erro" data-erro role="alert"></p>
+      <p class="links"><a href="#/entrar">Voltar para entrar</a></p>
+    </form>
   </template>
 
   <!-- Lista de alertas -->
@@ -84,7 +143,7 @@
           <h1>Meus alertas</h1>
           <p class="sub" data-limite></p>
         </div>
-        <a class="btn primario" href="#/novo" data-novo>Novo alerta</a>
+        <a class="btn primario" href="#/novo" data-novo><svg class="ic"><use href="#i-mais"/></svg>Novo alerta</a>
       </div>
       <div class="lista" data-lista></div>
     </section>
@@ -182,7 +241,7 @@
           <div class="fa-trajeto">
             <div class="fa-ponta"><strong data-r="origem">—</strong><span data-r="origem-cidade">Origem</span></div>
             <div class="fa-linha" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M2.5 19h19M3.4 13.6l2.8.7 2.3-1.3-5.8-4.4 1.4-.8 7.9 3 4.6-2.6c.9-.5 2-.2 2.5.7.5.9.2 2-.7 2.5L6 18.3 2 14.4z"/></svg>
+              <svg><use href="#i-aviao"/></svg>
             </div>
             <div class="fa-ponta fim"><strong data-r="destino">—</strong><span data-r="destino-cidade">Destino</span></div>
           </div>
@@ -221,34 +280,51 @@
   <!-- Detalhe de um alerta -->
   <template id="t-detalhe">
     <section class="conteudo">
-      <div class="topo">
-        <div>
-          <p class="sub"><a href="#/alertas">← Meus alertas</a></p>
-          <h1 data-titulo>—</h1>
-          <p class="sub" data-sub></p>
+      <p class="voltar"><a href="#/alertas"><svg class="ic"><use href="#i-seta"/></svg>Meus alertas</a></p>
+
+      <div class="det-bilhete" data-bilhete>
+        <div class="det-bilhete-rota">
+          <div class="det-bilhete-cabeca">
+            <span class="selo-bilhete" data-estado></span>
+            <span class="det-nome" data-nome></span>
+          </div>
+          <div class="det-trajeto">
+            <div class="fa-ponta"><strong data-b="origem">—</strong><span data-b="origem-cidade"></span></div>
+            <div class="fa-linha" aria-hidden="true"><svg><use href="#i-aviao"/></svg></div>
+            <div class="fa-ponta fim"><strong data-b="destino">—</strong><span data-b="destino-cidade"></span></div>
+          </div>
+          <h1 class="leitor" data-titulo>—</h1>
         </div>
-        <div class="acoes">
-          <button class="btn" data-pesquisar>Pesquisar agora</button>
-          <a class="btn" data-duplicar title="Novo alerta com esta rota e estas regras, para mudar datas ou destino">Duplicar</a>
-          <button class="btn" data-ligar></button>
-        </div>
+        <dl class="det-bilhete-infos">
+          <div><dt>Ida</dt><dd data-b="ida">—</dd></div>
+          <div><dt>Volta</dt><dd data-b="volta">—</dd></div>
+          <div><dt>Voos</dt><dd data-b="voos">—</dd></div>
+          <div><dt>Aviso</dt><dd data-b="aviso">—</dd></div>
+          <div><dt>Pesquisa</dt><dd data-b="pesquisa">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="det-acoes">
+        <button class="btn primario" data-pesquisar><svg class="ic"><use href="#i-lupa"/></svg><span>Pesquisar agora</span></button>
+        <button class="btn" data-ligar></button>
+        <a class="btn" data-duplicar title="Novo alerta com esta rota e estas regras, para mudar datas ou destino"><svg class="ic"><use href="#i-copiar"/></svg>Duplicar</a>
       </div>
 
       <div class="kpis">
-        <div class="card kpi"><span class="rotulo">Última consulta</span><strong data-k="ultima">—</strong><span class="detalhe" data-k="ultima-det"></span></div>
-        <div class="card kpi"><span class="rotulo">Média móvel 7 dias</span><strong data-k="media">—</strong><span class="detalhe" data-k="media-det"></span></div>
-        <div class="card kpi"><span class="rotulo">Gatilho do alerta</span><strong data-k="gatilho">—</strong><span class="detalhe" data-k="gatilho-det"></span></div>
-        <div class="card kpi"><span class="rotulo">Menor total já visto</span><strong data-k="minimo">—</strong><span class="detalhe" data-k="minimo-det"></span></div>
+        <div class="kpi"><span class="kpi-icone"><svg><use href="#i-relogio"/></svg></span><span class="rotulo">Última consulta</span><strong data-k="ultima">—</strong><span class="detalhe" data-k="ultima-det"></span></div>
+        <div class="kpi"><span class="kpi-icone"><svg><use href="#i-tendencia"/></svg></span><span class="rotulo">Média móvel 7 dias</span><strong data-k="media">—</strong><span class="detalhe" data-k="media-det"></span></div>
+        <div class="kpi destaque"><span class="kpi-icone"><svg><use href="#i-alvo"/></svg></span><span class="rotulo">Gatilho do aviso</span><strong data-k="gatilho">—</strong><span class="detalhe" data-k="gatilho-det"></span></div>
+        <div class="kpi"><span class="kpi-icone"><svg><use href="#i-trofeu"/></svg></span><span class="rotulo">Menor total já visto</span><strong data-k="minimo">—</strong><span class="detalhe" data-k="minimo-det"></span></div>
       </div>
 
-      <div class="card">
-        <div class="card-topo">
+      <div class="painel">
+        <div class="painel-topo">
           <h2 data-titulo-grafico>Total</h2>
-          <div class="segmentado" data-periodo>
-            <button data-dias="3">3 d</button>
-            <button data-dias="7">7 d</button>
-            <button data-dias="30" class="ativo">30 d</button>
-            <button data-dias="365">Tudo</button>
+          <div class="pilulas" data-periodo role="group" aria-label="Período do gráfico">
+            <button type="button" data-dias="3">3 d</button>
+            <button type="button" data-dias="7">7 d</button>
+            <button type="button" data-dias="30" class="ativo">30 d</button>
+            <button type="button" data-dias="365">Tudo</button>
           </div>
         </div>
         <div class="grafico"><canvas></canvas></div>
@@ -256,16 +332,18 @@
       </div>
 
       <div class="duas">
-        <div class="card"><h2>Mais barato agora</h2><div data-voos></div></div>
-        <div class="card"><h2>Fontes</h2><div data-fontes></div></div>
+        <div class="painel"><h2>Mais barato agora</h2><div data-voos></div></div>
+        <div class="painel"><h2>Sites pesquisados</h2><div data-fontes></div></div>
       </div>
 
+      <div class="secao-titulo"><h2>Editar alerta</h2><p class="sub">Trocar rota, datas ou escalas começa uma média nova.</p></div>
       <div data-form-lugar></div>
 
-      <div class="card perigo">
-        <h2>Apagar alerta</h2>
-        <p class="nota">Apaga o alerta e todo o histórico de consultas dele.</p>
-        <button class="btn perigo" data-apagar>Apagar alerta</button>
+      <div class="painel perigo">
+        <div class="perigo-linha">
+          <div><h2>Apagar alerta</h2><p class="nota">Apaga o alerta e todo o histórico de consultas dele.</p></div>
+          <button class="btn perigo" data-apagar><svg class="ic"><use href="#i-lixo"/></svg>Apagar alerta</button>
+        </div>
       </div>
     </section>
   </template>
@@ -273,39 +351,48 @@
   <!-- Conta -->
   <template id="t-conta">
     <section class="conteudo estreito">
-      <h1>Conta</h1>
-      <form class="card" data-form="nome">
+      <div class="topo"><div><h1>Conta</h1><p class="sub" data-tel-topo></p></div></div>
+      <div class="painel">
+        <h2>Aparência</h2>
+        <div class="pilulas" role="radiogroup" aria-label="Tema" data-tema-opcoes>
+          <label><input type="radio" name="tema" value="auto"><span>Automático</span></label>
+          <label><input type="radio" name="tema" value="claro"><span><svg><use href="#i-sol"/></svg>Claro</span></label>
+          <label><input type="radio" name="tema" value="escuro"><span><svg><use href="#i-lua"/></svg>Escuro</span></label>
+        </div>
+        <p class="nota">Automático segue o tema do aparelho. A escolha fica guardada neste navegador.</p>
+      </div>
+      <form class="painel" data-form="nome">
         <h2>Dados</h2>
-        <label>Nome <input name="nome" maxlength="60" required></label>
+        <label class="campo"><span class="rotulo">Nome</span><input name="nome" maxlength="60" required></label>
         <p class="nota">Celular: <strong data-tel></strong></p>
         <div class="linha-botao"><button class="btn primario" type="submit">Salvar</button><span class="msg" data-msg></span></div>
       </form>
-      <form class="card" data-form="senha">
+      <form class="painel" data-form="senha">
         <h2>Trocar senha</h2>
-        <label>Senha atual <input name="atual" type="password" autocomplete="current-password" required></label>
-        <label>Senha nova (mín. 8 caracteres) <input name="nova" type="password" autocomplete="new-password" minlength="8" required></label>
-        <div class="linha-botao"><button class="btn primario" type="submit">Trocar</button><span class="msg" data-msg></span></div>
+        <label class="campo"><span class="rotulo">Senha atual</span><span class="campo-senha"><input name="atual" type="password" autocomplete="current-password" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+        <label class="campo"><span class="rotulo">Senha nova <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="nova" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+        <div class="linha-botao"><button class="btn primario" type="submit">Trocar senha</button><span class="msg" data-msg></span></div>
       </form>
-      <div class="card">
+      <div class="painel">
         <h2>Sessões</h2>
         <p class="nota">Sai deste e de todos os outros aparelhos. O próximo acesso pede código no WhatsApp.</p>
-        <button class="btn" data-sair-todos>Sair de todos os aparelhos</button>
+        <div class="linha-botao"><button class="btn" data-sair-todos>Sair de todos os aparelhos</button></div>
       </div>
-      <div class="card" data-admin hidden>
+      <div class="painel" data-admin hidden>
         <h2>Operação</h2>
         <pre class="estado" data-estado></pre>
       </div>
-      <form class="card perigo" data-form="apagar">
+      <form class="painel perigo" data-form="apagar">
         <h2>Apagar conta</h2>
         <p class="nota">Apaga a conta, os alertas e o histórico. Não tem volta.</p>
-        <label>Senha <input name="senha" type="password" autocomplete="current-password" required></label>
-        <div class="linha-botao"><button class="btn perigo" type="submit">Apagar conta</button><span class="msg" data-msg></span></div>
+        <label class="campo"><span class="rotulo">Senha</span><span class="campo-senha"><input name="senha" type="password" autocomplete="current-password" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
+        <div class="linha-botao"><button class="btn perigo" type="submit"><svg class="ic"><use href="#i-lixo"/></svg>Apagar conta</button><span class="msg" data-msg></span></div>
       </form>
     </section>
   </template>
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=96b1707ae6"></script>
+  <script src="app.js?v=2966da83b1"></script>
 </body>
 </html>

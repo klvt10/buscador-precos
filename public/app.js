@@ -16,6 +16,58 @@ let atualizar = null; // timer da tela atual
 // Desafio de código em andamento (cadastro, login ou senha); some ao recarregar a página.
 let desafio = null;
 
+const SVG = 'http://www.w3.org/2000/svg';
+function icone(nome, classe = 'ic') {
+  const s = document.createElementNS(SVG, 'svg');
+  s.setAttribute('class', classe);
+  s.setAttribute('aria-hidden', 'true');
+  const u = document.createElementNS(SVG, 'use');
+  u.setAttribute('href', `#i-${nome}`);
+  s.append(u);
+  return s;
+}
+
+// --- Tema ---------------------------------------------------------------------------------------
+// Sem escolha guardada vale o tema do aparelho; tema.js aplica a escolha antes da primeira pintura.
+const midiaEscura = matchMedia('(prefers-color-scheme: dark)');
+const temaEscolhido = () => document.documentElement.dataset.tema || 'auto';
+const temaEfetivo = () => document.documentElement.dataset.tema || (midiaEscura.matches ? 'escuro' : 'claro');
+
+function aplicarTema(escolha) {
+  const raiz = document.documentElement;
+  if (escolha === 'auto') delete raiz.dataset.tema;
+  else raiz.dataset.tema = escolha;
+  try {
+    if (escolha === 'auto') localStorage.removeItem('tema');
+    else localStorage.setItem('tema', escolha);
+  } catch { /* armazenamento bloqueado: vale só nesta visita */ }
+  temaMudou();
+}
+
+function temaMudou() {
+  const outro = temaEfetivo() === 'escuro' ? 'claro' : 'escuro';
+  for (const b of $$('[data-tema-botao]')) {
+    b.setAttribute('aria-label', `Mudar para o tema ${outro}`);
+    b.title = `Mudar para o tema ${outro}`;
+  }
+  for (const r of $$('input[name="tema"]')) r.checked = r.value === temaEscolhido();
+  window.dispatchEvent(new Event('tema'));
+}
+
+$('[data-tema-botao]').addEventListener('click', () => aplicarTema(temaEfetivo() === 'escuro' ? 'claro' : 'escuro'));
+midiaEscura.addEventListener('change', () => { if (temaEscolhido() === 'auto') temaMudou(); });
+
+// Mostrar/ocultar senha em qualquer campo de senha.
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('.ver-senha');
+  if (!b) return;
+  const i = b.parentElement.querySelector('input');
+  const mostrar = i.type === 'password';
+  i.type = mostrar ? 'text' : 'password';
+  b.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+  b.classList.toggle('ligado', mostrar);
+});
+
 function el(tag, attrs = {}, ...filhos) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -43,14 +95,30 @@ async function api(caminho, { method = 'GET', body } = {}) {
   return corpo;
 }
 
+let sinalTela = new AbortController(); // ouvintes globais da tela atual (ex.: troca de tema)
+
 function montar(id) {
   if (atualizar) clearInterval(atualizar);
   atualizar = null;
   if (grafico) { grafico.destroy(); grafico = null; }
+  sinalTela.abort();
+  sinalTela = new AbortController();
   const tela = $('#tela');
   tela.replaceChildren($(`#${id}`).content.cloneNode(true));
-  $('#barra').hidden = !usuario;
+  document.body.classList.toggle('logado', !!usuario);
+  const secao = location.hash.startsWith('#/conta') ? 'conta' : 'alertas';
+  for (const a of $$('[data-nav]')) {
+    if (a.dataset.nav === secao) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  }
   window.scrollTo(0, 0);
+  return tela;
+}
+
+// Telas de acesso: formulário dentro da moldura com a apresentação.
+function montarAcesso(id) {
+  const tela = montar('t-acesso');
+  $('[data-acesso-lugar]', tela).replaceChildren($(`#${id}`).content.cloneNode(true));
   return tela;
 }
 
@@ -77,7 +145,7 @@ async function enviar(form, fn) {
 // --- Acesso -------------------------------------------------------------------------------------
 
 function telaEntrar() {
-  const t = montar('t-entrar');
+  const t = montarAcesso('t-entrar');
   const f = $('form', t);
   f.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -95,7 +163,7 @@ function telaEntrar() {
 }
 
 function telaCadastro() {
-  const t = montar('t-cadastro');
+  const t = montarAcesso('t-cadastro');
   const f = $('form', t);
   f.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -108,7 +176,7 @@ function telaCadastro() {
 }
 
 function telaEsqueci() {
-  const t = montar('t-esqueci');
+  const t = montarAcesso('t-esqueci');
   const f = $('form', t);
   f.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -122,7 +190,7 @@ function telaEsqueci() {
 
 function telaCodigo() {
   if (!desafio) return ir('#/entrar');
-  const t = montar('t-codigo');
+  const t = montarAcesso('t-codigo');
   const f = $('form', t);
   $('[data-tel]', t).textContent = desafio.tel;
   const novaSenha = desafio.tipo === 'senha';
@@ -446,6 +514,50 @@ function descricao(a) {
 
 const textoEscalas = (n) => (!n ? 'direto' : n === 1 ? '1 escala' : `${n} escalas`);
 
+// Situação do alerta para selo e cor do bilhete.
+function situacao(a) {
+  if (a.data_ida < hojeISO()) return { classe: 'passou', texto: 'Data passou' };
+  return a.ativo ? { classe: 'ligado', texto: 'Ligado' } : { classe: 'pausado', texto: 'Pausado' };
+}
+
+// Diferença da última consulta para a média: texto e classe (abaixo/acima).
+function comparacao(ultima, media) {
+  if (ultima && media) {
+    const dif = (ultima.total / media - 1) * 100;
+    return { texto: `${pct(dif)} ${dif < 0 ? 'abaixo' : 'acima'} da média`, classe: dif < 0 ? 'abaixo' : 'acima' };
+  }
+  return { texto: ultima ? 'Montando a média' : 'Aguardando a primeira consulta', classe: 'neutro' };
+}
+
+function datasTexto(a) {
+  return a.data_volta ? `${dataCompacta(a.data_ida)} → ${dataCompacta(a.data_volta)}` : `${dataCompacta(a.data_ida)} · só ida`;
+}
+
+function cartaoAlerta(x) {
+  const a = x.alerta;
+  const sit = situacao(a);
+  const cmp = comparacao(x.ultima, x.media);
+  const ponta = (codigo, fim) => el('div', { class: `fa-ponta${fim ? ' fim' : ''}` }, el('strong', {}, codigo), el('span', {}, cidadeDe(codigo)));
+  return el('a', { class: `cartao-alerta ${sit.classe}`, href: `#/alertas/${a.id}` },
+    el('div', { class: 'ca-bilhete' },
+      el('div', { class: 'ca-cabeca' },
+        el('span', { class: 'selo-bilhete' }, sit.texto),
+        a.nome ? el('span', { class: 'ca-nome' }, a.nome) : null),
+      el('div', { class: 'det-trajeto' },
+        ponta(a.origem),
+        el('div', { class: 'fa-linha', 'aria-hidden': 'true' }, icone('aviao', '')),
+        ponta(a.destino, true))),
+    el('div', { class: 'ca-corpo' },
+      el('div', { class: 'ca-chips' },
+        el('span', { class: 'chip' }, icone('calendario'), datasTexto(a)),
+        el('span', { class: 'chip' }, icone('escala'), a.so_diretos === false ? 'Com escalas' : 'Só diretos'),
+        el('span', { class: 'chip' }, icone('relogio'), rotuloIntervalo(a.intervalo_min)),
+        el('span', { class: 'chip' }, icone('sino'), `${Math.round(a.desconto_min * 100)} % abaixo`)),
+      el('div', { class: 'ca-preco' },
+        el('div', {}, el('span', { class: 'rotulo' }, a.data_volta ? 'Total ida + volta' : 'Preço da ida'), el('strong', {}, x.ultima ? brl(x.ultima.total) : '—')),
+        el('span', { class: `variacao ${cmp.classe}` }, cmp.texto))));
+}
+
 function titulo(a) {
   return `${a.origem} ${a.data_volta ? '⇄' : '→'} ${a.destino}`;
 }
@@ -464,35 +576,15 @@ async function telaAlertas() {
     const lista = $('[data-lista]', t);
     lista.replaceChildren();
     if (!r.alertas.length) {
-      lista.append(el('div', { class: 'card vazio-grande' },
-        el('p', {}, 'Nenhum alerta ainda.'),
-        el('p', { class: 'nota' }, 'Crie um alerta com a rota e as datas: os preços passam a ser pesquisados sozinhos e o aviso chega no WhatsApp quando o total fica abaixo da média.'),
-        el('a', { class: 'btn primario', href: '#/novo' }, 'Criar o primeiro alerta')));
+      lista.append(el('div', { class: 'vazio-grande' },
+        el('span', { class: 'vazio-icone' }, icone('aviao', '')),
+        el('h2', {}, 'Nenhum alerta ainda'),
+        el('p', { class: 'nota' }, 'Escolha a rota e as datas: os preços passam a ser pesquisados sozinhos e o aviso chega no WhatsApp quando o total fica abaixo da média.'),
+        el('a', { class: 'btn primario grande', href: '#/novo' }, icone('mais'), 'Criar o primeiro alerta')));
       return;
     }
-    for (const x of r.alertas) {
-      const a = x.alerta;
-      let estado = 'Aguardando a primeira consulta';
-      let classe = '';
-      if (x.ultima && x.media) {
-        const dif = (x.ultima.total / x.media - 1) * 100;
-        estado = `${pct(dif)} ${dif < 0 ? 'abaixo' : 'acima'} da média`;
-        classe = dif < 0 ? 'abaixo' : 'acima';
-      } else if (x.ultima) {
-        estado = 'Montando a média';
-      }
-      const passou = a.data_ida < hojeISO();
-      lista.append(el('a', { class: 'card item-alerta', href: `#/alertas/${a.id}` },
-        el('div', { class: 'item-topo' },
-          el('strong', {}, titulo(a)),
-          el('span', { class: `selo ${passou ? 'desligado' : a.ativo ? 'ligado' : 'desligado'}` }, passou ? 'Data passou' : a.ativo ? 'Ligado' : 'Pausado')),
-        el('span', { class: 'cidades' }, cidades(a)),
-        a.nome ? el('span', { class: 'nome-alerta' }, a.nome) : null,
-        el('span', { class: 'sub' }, descricao(a)),
-        el('div', { class: 'item-rodape' },
-          el('span', { class: 'preco' }, x.ultima ? brl(x.ultima.total) : '—'),
-          el('span', { class: `detalhe ${classe}` }, estado))));
-    }
+    for (const x of r.alertas) lista.append(cartaoAlerta(x));
+    lista.append(el('a', { class: 'cartao-novo', href: '#/novo' }, icone('mais', 'cartao-novo-icone'), el('strong', {}, 'Novo alerta'), el('span', {}, 'Outra rota ou outras datas')));
   };
   await carregar();
   atualizar = setInterval(() => carregar().catch(() => {}), 60e3);
@@ -698,32 +790,40 @@ async function telaDetalhe(id) {
 
   const desenhar = () => {
     const { alerta: a, ultima, media, n_media: n, minimo } = dados;
-    $('[data-titulo]', t).textContent = a.nome ? `${a.nome} · ${titulo(a)}` : titulo(a);
-    $('[data-sub]', t).textContent = `${cidades(a)} · ${descricao(a)}`;
+    document.title = `${titulo(a)} · Buscador de Passagens`;
+    $('[data-titulo]', t).textContent = a.nome ? `${a.nome}: ${cidades(a)}` : cidades(a);
+    const sit = situacao(a);
+    $('[data-bilhete]', t).className = `det-bilhete ${sit.classe}`;
+    $('[data-estado]', t).textContent = sit.texto;
+    $('[data-nome]', t).textContent = a.nome || '';
+    const b = (nome) => $(`[data-b="${nome}"]`, t);
+    b('origem').textContent = a.origem;
+    b('destino').textContent = a.destino;
+    b('origem-cidade').textContent = cidadeDe(a.origem);
+    b('destino-cidade').textContent = cidadeDe(a.destino);
+    b('ida').textContent = dataCompacta(a.data_ida);
+    b('volta').textContent = a.data_volta ? `${dataCompacta(a.data_volta)} · ${textoNoites(noitesEntre(a.data_ida, a.data_volta))}` : 'Só ida';
+    b('voos').textContent = a.so_diretos === false ? 'Com escalas' : 'Só diretos';
+    b('aviso').textContent = `${Math.round(a.desconto_min * 100)} % abaixo da média`;
+    b('pesquisa').textContent = `A cada ${rotuloIntervalo(a.intervalo_min)}`;
     $('[data-titulo-grafico]', t).textContent = a.data_volta ? 'Total ida + volta' : 'Preço da ida';
     const lig = $('[data-ligar]', t);
-    lig.textContent = a.ativo ? 'Alerta ligado' : 'Alerta pausado';
-    lig.className = `btn ${a.ativo ? 'ligado' : 'desligado'}`;
-    lig.title = a.ativo ? 'Pausa os avisos no WhatsApp (as pesquisas param)' : 'Religa os avisos';
+    lig.replaceChildren(icone(a.ativo ? 'pausa' : 'play'), a.ativo ? 'Pausar alerta' : 'Religar alerta');
+    lig.title = a.ativo ? 'Pausa as pesquisas e os avisos no WhatsApp' : 'Volta a pesquisar e avisar';
     const pesq = $('[data-pesquisar]', t);
     pesq.disabled = a.pesquisa_pedida;
-    pesq.textContent = a.pesquisa_pedida ? 'Pesquisando…' : 'Pesquisar agora';
+    pesq.classList.toggle('girando', a.pesquisa_pedida);
+    $('span', pesq).textContent = a.pesquisa_pedida ? 'Pesquisando…' : 'Pesquisar agora';
 
     const k = (nome) => $(`[data-k="${nome}"]`, t);
     k('ultima').textContent = ultima ? brl(ultima.total) : '—';
     const det = k('ultima-det');
-    det.className = 'detalhe';
-    if (ultima && media) {
-      const dif = (ultima.total / media - 1) * 100;
-      det.textContent = `${dataHora(ultima.ts)} · ${pct(dif)} ${dif < 0 ? 'abaixo' : 'acima'} da média`;
-      det.classList.add(dif < 0 ? 'abaixo' : 'acima');
-    } else {
-      det.textContent = ultima ? dataHora(ultima.ts) : 'Nenhuma consulta ainda';
-    }
+    const cmp = comparacao(ultima, media);
+    det.replaceChildren(ultima ? `${dataHora(ultima.ts)} · ` : '', el('span', { class: `variacao ${cmp.classe}` }, ultima && media ? cmp.texto : ultima ? 'montando a média' : 'nenhuma consulta ainda'));
     k('media').textContent = brl(media);
     k('media-det').textContent = media ? `${n} consulta${n === 1 ? '' : 's'} anteriores` : 'Sem histórico ainda';
     k('gatilho').textContent = media ? brl(media * (1 - a.desconto_min)) : '—';
-    k('gatilho-det').textContent = `Alerta com total ${Math.round(a.desconto_min * 100)} % abaixo da média`;
+    k('gatilho-det').textContent = `Aviso com total ${Math.round(a.desconto_min * 100)} % abaixo da média`;
     k('minimo').textContent = minimo ? brl(minimo.total) : '—';
     k('minimo-det').textContent = minimo ? dataHora(minimo.ts) : '';
 
@@ -748,7 +848,7 @@ async function telaDetalhe(id) {
         datasets: [
           { label: 'Total', data: serie((p) => p.total), borderColor: cor('--serie-total'), backgroundColor: cor('--serie-total'), borderWidth: 2, pointRadius: pontos.map((p) => (p.alertado ? 5 : 0)), pointHoverRadius: 4, tension: 0.2 },
           { label: 'Média 7 dias', data: serie((p) => p.media), borderColor: cor('--serie-media'), borderWidth: 1.5, pointRadius: 0, spanGaps: true },
-          { label: 'Gatilho do alerta', data: serie((p) => p.media && p.media * (1 - desconto)), borderColor: cor('--serie-gatilho'), borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, spanGaps: true },
+          { label: 'Gatilho do aviso', data: serie((p) => p.media && p.media * (1 - desconto)), borderColor: cor('--serie-gatilho'), borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, spanGaps: true },
         ],
       },
       options: {
@@ -797,6 +897,7 @@ async function telaDetalhe(id) {
   let voltas = 0;
   atualizar = setInterval(() => { voltas += 1; carregar(voltas % 4 === 0).catch(() => {}); }, 15e3);
 
+  window.addEventListener('tema', () => carregarGrafico().catch(() => {}), { signal: sinalTela.signal });
   $('[data-periodo]', t).addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
@@ -828,42 +929,45 @@ function desenharVoos(box, a, ultima) {
     box.append(el('p', { class: 'vazio' }, 'Aguardando a primeira consulta.'));
     return;
   }
-  const trechos = [['ida', `Ida ${diaMes(a.data_ida)} · ${a.origem} → ${a.destino}`]];
-  if (ultima.volta) trechos.push(['volta', `Volta ${diaMes(a.data_volta)} · ${a.destino} → ${a.origem}`]);
-  for (const [k, rotulo] of trechos) {
+  const trechos = [['ida', 'Ida', a.data_ida, a.origem, a.destino]];
+  if (ultima.volta) trechos.push(['volta', 'Volta', a.data_volta, a.destino, a.origem]);
+  for (const [k, nome, data, o, d] of trechos) {
     const v = ultima[k];
     const link = v.link && linkSeguro(v.link);
     const fonte = fontes[v.fonte] || v.fonte;
     box.append(el('div', { class: 'voo' },
-      el('span', { class: 'trecho' }, rotulo),
-      el('span', {}, `${v.companhia}${v.voo ? ` ${v.voo}` : ''} · ${v.partida} → ${v.chegada} · ${textoEscalas(v.escalas)}`),
-      el('span', { class: 'preco' }, brl(v.preco)),
-      el('span', { class: 'fonte' }, 'Fonte: ', link ? el('a', { href: link, target: '_blank', rel: 'noopener noreferrer' }, fonte) : fonte)));
+      el('div', { class: 'voo-cabeca' }, el('span', { class: 'voo-trecho' }, `${nome} · ${dataCompacta(data)}`), el('span', { class: 'voo-rota' }, `${o} → ${d}`)),
+      el('div', { class: 'voo-linha' },
+        el('div', { class: 'voo-horario' },
+          el('strong', {}, v.partida),
+          el('span', { class: `voo-meio${v.escalas ? ' com-escala' : ''}` }, textoEscalas(v.escalas)),
+          el('strong', {}, v.chegada)),
+        el('span', { class: 'preco' }, brl(v.preco))),
+      el('div', { class: 'voo-rodape' },
+        el('span', {}, `${v.companhia}${v.voo ? ` · ${v.voo}` : ''}`),
+        link ? el('a', { href: link, target: '_blank', rel: 'noopener noreferrer' }, `Ver em ${fonte} ↗`) : el('span', {}, fonte))));
   }
-  box.append(el('div', { class: 'voo' },
-    el('span', { class: 'trecho' }, `Consulta de ${dataHora(ultima.ts)}`),
-    el('strong', {}, 'Total'),
-    el('span', { class: 'preco' }, brl(ultima.total))));
+  box.append(el('div', { class: 'voo-total' },
+    el('span', {}, `Consulta de ${dataHora(ultima.ts)}`),
+    el('div', {}, el('span', { class: 'rotulo' }, 'Total'), el('strong', {}, brl(ultima.total)))));
 }
 
 function desenharFontes(box, trechos, soDiretos) {
   box.replaceChildren();
   for (const tr of trechos || []) {
-    const tab = el('table', { class: 'fontes' },
-      el('thead', {}, el('tr', {}, el('th', {}, `${tr.origem} → ${tr.destino} ${diaMes(tr.data)}`), el('th', { class: 'num' }, 'Menor'), el('th', {}, 'Quando'))));
-    const tb = el('tbody');
+    const lista = el('ul', { class: 'fontes' });
     for (const f of tr.fontes) {
-      let quando = f.ts ? dataHora(f.ts) : '—';
-      if (f.pesquisando) quando = 'pesquisando…';
-      else if (f.pausada) quando = 'fora do ar';
-      else if (f.ok === false) quando = `sem resposta (${f.ts ? dataHora(f.ts) : ''})`;
-      tb.append(el('tr', { class: f.ok === false || f.pausada ? 'apagado' : '' },
-        el('td', {}, f.nome),
-        el('td', { class: 'num' }, f.ok ? (f.menor != null ? brl(f.menor) : soDiretos ? 'sem voo direto' : 'sem voo') : '—'),
-        el('td', {}, quando)));
+      let quando = f.ts ? dataHora(f.ts) : 'ainda não pesquisado';
+      let estado = f.ok ? 'ok' : f.ok === false ? 'falha' : 'espera';
+      if (f.pesquisando) { quando = 'pesquisando…'; estado = 'andando'; }
+      else if (f.pausada) { quando = 'fora do ar no momento'; estado = 'falha'; }
+      else if (f.ok === false) quando = `sem resposta · ${f.ts ? dataHora(f.ts) : ''}`;
+      lista.append(el('li', { class: `fonte ${estado}` },
+        el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }),
+        el('span', { class: 'fonte-nome' }, f.nome, el('small', {}, quando)),
+        el('span', { class: 'fonte-preco' }, f.ok ? (f.menor != null ? brl(f.menor) : soDiretos ? 'sem voo direto' : 'sem voo') : '—')));
     }
-    tab.append(tb);
-    box.append(el('div', { class: 'tabela-rolagem' }, tab));
+    box.append(el('div', { class: 'fontes-trecho' }, el('p', { class: 'fontes-titulo' }, `${tr.origem} → ${tr.destino} · ${dataCompacta(tr.data)}`), lista));
   }
 }
 
@@ -874,6 +978,9 @@ async function telaConta() {
   const fNome = $('[data-form="nome"]', t);
   fNome.nome.value = usuario.nome;
   $('[data-tel]', t).textContent = usuario.telefone;
+  $('[data-tel-topo]', t).textContent = usuario.nome;
+  for (const r of $$('input[name="tema"]', t)) r.checked = r.value === temaEscolhido();
+  $('[data-tema-opcoes]', t).addEventListener('change', (ev) => aplicarTema(ev.target.value));
   fNome.addEventListener('submit', (ev) => {
     ev.preventDefault();
     enviar(fNome, async () => {
@@ -946,4 +1053,5 @@ async function rota() {
 }
 
 window.addEventListener('hashchange', rota);
+temaMudou();
 rota();

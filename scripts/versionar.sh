@@ -4,7 +4,7 @@
 # Rodar antes de cada commit que mexe em public/.
 set -e
 cd "$(dirname "$0")/../public"
-for f in app.js style.css vendor/chart.umd.min.js vendor/chartjs-adapter-date-fns.bundle.min.js; do
+for f in tema.js app.js style.css vendor/chart.umd.min.js vendor/chartjs-adapter-date-fns.bundle.min.js; do
   v=$(sha1sum "$f" | cut -c1-10)
   sed -i -E "s#(\"${f})(\?v=[0-9a-f]+)?\"#\1?v=${v}\"#" index.html
 done
