@@ -496,7 +496,9 @@ function campoAeroporto(caixa, { rotulo, aoEscolher }) {
     else { valor = ''; chip.hidden = true; if (aoEscolher) aoEscolher(''); mostrarDetalhe(r.total ? 'Escolha um aeroporto da lista.' : 'Aeroporto não encontrado.'); }
   };
 
-  entrada.addEventListener('focus', () => { entrada.select(); abrir(valor ? '' : entrada.value); });
+  let semLista = false; // foco posto pela tela (não pelo usuário): não abre a lista por cima do formulário
+  entrada.addEventListener('focus', () => { entrada.select(); if (!semLista) abrir(valor ? '' : entrada.value); });
+  entrada.addEventListener('focar-sem-lista', () => { semLista = true; entrada.focus(); semLista = false; });
   entrada.addEventListener('click', () => { if (lista.hidden) abrir(valor ? '' : entrada.value); });
   entrada.addEventListener('input', () => {
     if (valor) { valor = ''; chip.hidden = true; if (aoEscolher) aoEscolher(''); }
@@ -752,7 +754,15 @@ function campoData(caixa, { rotulo, faixa }) {
     const [, , d] = partes(foco || isoDe(a, m, 1));
     const ultimo = new Date(Date.UTC(a, m + 1, 0)).getUTCDate();
     foco = isoDe(a, m, Math.min(d, ultimo));
+    // O redesenho troca os botões do calendário: se o foco estava num deles (dia ou ‹ ›), ele cairia no
+    // <body> e o focusout fecharia o calendário. Devolve o foco ao botão equivalente do mês novo.
+    const ativo = cal.contains(document.activeElement) ? document.activeElement : null;
+    const nav = ativo?.classList.contains('cal-nav') ? ativo.getAttribute('aria-label') : null;
     desenhar();
+    if (ativo) {
+      const b = nav ? $(`.cal-nav[aria-label="${nav}"]`, cal) : null;
+      if (b && !b.disabled) b.focus(); else focarDia();
+    }
   };
   const abrir = () => {
     if (!cal.hidden) return;
@@ -1005,7 +1015,10 @@ async function telaNovo(baseId) {
   const lugar = $('[data-lista]', t);
   lugar.className = 'lugar-novo';
   formAlerta(lugar, null, base);
-  $$('.combo-entrada', t)[base ? 1 : 0].focus();
+  // Foco inicial sem abrir a lista de aeroportos: aberta, ela cobre as datas e o clique no calendário
+  // cairia num aeroporto. A lista abre ao clicar, digitar ou usar a seta para baixo.
+  const c = $$('.combo-entrada', t)[base ? 1 : 0];
+  c.dispatchEvent(new CustomEvent('focar-sem-lista'));
 }
 
 function linkSeguro(u) {
