@@ -37,8 +37,11 @@ Conta e Administração; marca, título e aba ativa (`aria-current`) seguem o en
 sem recarregar a página (o voltar do navegador funciona). Empregos conversa com `/api/empregos/…`
 (mesma sessão).
 
-Empregos: o badge de fonte mostra também as outras fontes onde a mesma vaga apareceu ("via Gupy · também
-em Adzuna, Infojobs"); fontes aparecem pelo nome (Adzuna, Gupy, PCI Concursos, Infojobs, Empregos.com.br,
+Empregos: badges cheios com cor fixa por valor (modelo: presencial azul, híbrido âmbar, remoto verde, não
+informado cinza; contrato; fonte: Adzuna ciano, Gupy roxo, Infojobs rosa, Empregos.com.br laranja, Remotar
+esmeralda, PCI Concursos índigo), a mesma cor no cartão, nos chips de filtro (contorno; cheio quando marcado) e
+no gráfico e nos cartões da administração; tokens `--emp-cor-<valor>` e `--emp-cor-<valor>-txt` no `style.css`.
+O badge da fonte traz o nome e, ao lado, "também em" com mini-badges das outras fontes onde a mesma vaga apareceu; fontes aparecem pelo nome (Adzuna, Gupy, PCI Concursos, Infojobs, Empregos.com.br,
 Remotar) no cartão, nos filtros, no alerta e na administração. Vaga sem modelo mostra "Modelo não informado";
 os filtros de modelo e contrato têm "Não informado" (`nao_informado`). Com a busca coletando, cartão e
 resultados mostram "Buscando vagas…" (Buscar agora desabilitado) e os resultados se atualizam a cada 15 s até

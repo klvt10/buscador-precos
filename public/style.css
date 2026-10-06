@@ -17,15 +17,23 @@
   --emp-serie-2: #bf8700;
   --emp-serie-3: #8250df;
   --emp-serie-4: #1a7f37;
-  --emp-presencial-bg: #e7edf5; --emp-presencial-fg: #3b5878;
-  --emp-hibrido-bg: #fcefd2; --emp-hibrido-fg: #865500;
-  --emp-remoto-bg: #d9f3e1; --emp-remoto-fg: #17703a;
-  --emp-clt-bg: #e5e7fb; --emp-clt-fg: #3a45b0;
-  --emp-pj-bg: #f0e5fb; --emp-pj-fg: #7638b3;
-  --emp-estagio-bg: #d9f1f6; --emp-estagio-fg: #0b6b86;
-  --emp-temporario-bg: #f1ebe4; --emp-temporario-fg: #74604d;
   --emp-concurso: #8250df;
   --emp-favorito: #d4a106;
+  /* Cor cheia por valor: modelo, contrato e fonte (texto escolhido com contraste ≥ 4,5:1) */
+  --emp-cor-presencial: #2563eb; --emp-cor-presencial-txt: #ffffff;
+  --emp-cor-hibrido: #d97706; --emp-cor-hibrido-txt: #111827;
+  --emp-cor-remoto: #059669; --emp-cor-remoto-txt: #111827;
+  --emp-cor-nao_informado: #6b7280; --emp-cor-nao_informado-txt: #ffffff;
+  --emp-cor-clt: #4f46e5; --emp-cor-clt-txt: #ffffff;
+  --emp-cor-pj: #9333ea; --emp-cor-pj-txt: #ffffff;
+  --emp-cor-estagio: #0891b2; --emp-cor-estagio-txt: #111827;
+  --emp-cor-temporario: #78716c; --emp-cor-temporario-txt: #ffffff;
+  --emp-cor-adzuna: #0e7490; --emp-cor-adzuna-txt: #ffffff;
+  --emp-cor-gupy: #7c3aed; --emp-cor-gupy-txt: #ffffff;
+  --emp-cor-infojobs: #db2777; --emp-cor-infojobs-txt: #ffffff;
+  --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
+  --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
+  --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
   --raio: 10px;
   --realce: #fff3b0;
   --sombra: 0 12px 32px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .08);
@@ -58,15 +66,22 @@
   --emp-serie-2: #d29922;
   --emp-serie-3: #a371f7;
   --emp-serie-4: #3fb950;
-  --emp-presencial-bg: #1d2836; --emp-presencial-fg: #a8c0db;
-  --emp-hibrido-bg: #3a2b0d; --emp-hibrido-fg: #e8b84a;
-  --emp-remoto-bg: #11311c; --emp-remoto-fg: #5fd57a;
-  --emp-clt-bg: #232748; --emp-clt-fg: #a9b0f7;
-  --emp-pj-bg: #332247; --emp-pj-fg: #cda6f6;
-  --emp-estagio-bg: #0e3038; --emp-estagio-fg: #6cd4e6;
-  --emp-temporario-bg: #342c25; --emp-temporario-fg: #cdbba8;
   --emp-concurso: #a371f7;
   --emp-favorito: #e3b341;
+  --emp-cor-presencial: #2563eb; --emp-cor-presencial-txt: #ffffff;
+  --emp-cor-hibrido: #d97706; --emp-cor-hibrido-txt: #111827;
+  --emp-cor-remoto: #059669; --emp-cor-remoto-txt: #111827;
+  --emp-cor-nao_informado: #6b7280; --emp-cor-nao_informado-txt: #ffffff;
+  --emp-cor-clt: #4f46e5; --emp-cor-clt-txt: #ffffff;
+  --emp-cor-pj: #9333ea; --emp-cor-pj-txt: #ffffff;
+  --emp-cor-estagio: #0891b2; --emp-cor-estagio-txt: #111827;
+  --emp-cor-temporario: #78716c; --emp-cor-temporario-txt: #ffffff;
+  --emp-cor-adzuna: #0e7490; --emp-cor-adzuna-txt: #ffffff;
+  --emp-cor-gupy: #7c3aed; --emp-cor-gupy-txt: #ffffff;
+  --emp-cor-infojobs: #db2777; --emp-cor-infojobs-txt: #ffffff;
+  --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
+  --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
+  --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -98,15 +113,22 @@
   --emp-serie-2: #d29922;
   --emp-serie-3: #a371f7;
   --emp-serie-4: #3fb950;
-  --emp-presencial-bg: #1d2836; --emp-presencial-fg: #a8c0db;
-  --emp-hibrido-bg: #3a2b0d; --emp-hibrido-fg: #e8b84a;
-  --emp-remoto-bg: #11311c; --emp-remoto-fg: #5fd57a;
-  --emp-clt-bg: #232748; --emp-clt-fg: #a9b0f7;
-  --emp-pj-bg: #332247; --emp-pj-fg: #cda6f6;
-  --emp-estagio-bg: #0e3038; --emp-estagio-fg: #6cd4e6;
-  --emp-temporario-bg: #342c25; --emp-temporario-fg: #cdbba8;
   --emp-concurso: #a371f7;
   --emp-favorito: #e3b341;
+  --emp-cor-presencial: #2563eb; --emp-cor-presencial-txt: #ffffff;
+  --emp-cor-hibrido: #d97706; --emp-cor-hibrido-txt: #111827;
+  --emp-cor-remoto: #059669; --emp-cor-remoto-txt: #111827;
+  --emp-cor-nao_informado: #6b7280; --emp-cor-nao_informado-txt: #ffffff;
+  --emp-cor-clt: #4f46e5; --emp-cor-clt-txt: #ffffff;
+  --emp-cor-pj: #9333ea; --emp-cor-pj-txt: #ffffff;
+  --emp-cor-estagio: #0891b2; --emp-cor-estagio-txt: #111827;
+  --emp-cor-temporario: #78716c; --emp-cor-temporario-txt: #ffffff;
+  --emp-cor-adzuna: #0e7490; --emp-cor-adzuna-txt: #ffffff;
+  --emp-cor-gupy: #7c3aed; --emp-cor-gupy-txt: #ffffff;
+  --emp-cor-infojobs: #db2777; --emp-cor-infojobs-txt: #ffffff;
+  --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
+  --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
+  --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -1083,18 +1105,8 @@ body:not(.admin) [data-so-admin] { display: none; }
 .emp-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: .76rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
 .emp-badge .ic { width: 13px; height: 13px; }
 .emp-b-aprox { margin-left: 2px; font-size: .68rem; font-weight: 500; opacity: .75; }
-.emp-b-presencial.emp-badge, .emp-b-presencial input:checked + span { color: var(--emp-presencial-fg); background: var(--emp-presencial-bg); border-color: color-mix(in srgb, var(--emp-presencial-fg) 35%, transparent); }
-.emp-b-hibrido.emp-badge, .emp-b-hibrido input:checked + span { color: var(--emp-hibrido-fg); background: var(--emp-hibrido-bg); border-color: color-mix(in srgb, var(--emp-hibrido-fg) 35%, transparent); }
-.emp-b-remoto.emp-badge, .emp-b-remoto input:checked + span { color: var(--emp-remoto-fg); background: var(--emp-remoto-bg); border-color: color-mix(in srgb, var(--emp-remoto-fg) 35%, transparent); }
-.emp-b-clt.emp-badge, .emp-b-clt input:checked + span { color: var(--emp-clt-fg); background: var(--emp-clt-bg); border-color: color-mix(in srgb, var(--emp-clt-fg) 35%, transparent); }
-.emp-b-pj.emp-badge, .emp-b-pj input:checked + span { color: var(--emp-pj-fg); background: var(--emp-pj-bg); border-color: color-mix(in srgb, var(--emp-pj-fg) 35%, transparent); }
-.emp-b-estagio.emp-badge, .emp-b-estagio input:checked + span { color: var(--emp-estagio-fg); background: var(--emp-estagio-bg); border-color: color-mix(in srgb, var(--emp-estagio-fg) 35%, transparent); }
-.emp-b-temporario.emp-badge, .emp-b-temporario input:checked + span { color: var(--emp-temporario-fg); background: var(--emp-temporario-bg); border-color: color-mix(in srgb, var(--emp-temporario-fg) 35%, transparent); }
-.emp-b-fonte.emp-badge { font-weight: 500; color: var(--suave); background: transparent; border: 1px dashed var(--suave); }
 .emp-b-uf.emp-badge { color: var(--emp-concurso); background: color-mix(in srgb, var(--emp-concurso) 12%, transparent); border-color: color-mix(in srgb, var(--emp-concurso) 40%, transparent); }
 /* Pílula de filtro marcada com cor de badge: contador acompanha a cor */
-.pilulas label[class*="emp-b-"] input:checked + span span.emp-conta { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
-.pilulas label[class*="emp-b-"] span .ic { width: 14px; height: 14px; }
 
 /* Abas com contagem e aviso de ação */
 [data-filtro] .aba-n { margin-left: 2px; }
@@ -1108,6 +1120,35 @@ body:not(.admin) [data-so-admin] { display: none; }
 /* Empregos: coleta em andamento, modelo/contrato não informado, fonte com outras fontes */
 .emp-coletando { color: var(--primaria); font-weight: 600; }
 .emp-coletando .ic { animation: pulsar 1s ease-in-out infinite; }
-.emp-b-sem-modelo.emp-badge { font-weight: 500; color: var(--suave); background: var(--fundo-2); border-color: var(--borda); }
-.emp-b-nao_informado input:checked + span { color: var(--texto); background: var(--fundo-2); border-color: var(--suave); }
-.emp-b-fonte.emp-badge { white-space: normal; text-align: left; border-radius: 12px; }
+
+/* Cores por valor: badge cheio no cartão; no filtro, contorno na cor (cheio quando marcado) */
+.emp-cor { --c: var(--emp-cor-nao_informado); --ct: var(--emp-cor-nao_informado-txt); }
+.emp-cor-presencial { --c: var(--emp-cor-presencial); --ct: var(--emp-cor-presencial-txt); }
+.emp-cor-hibrido { --c: var(--emp-cor-hibrido); --ct: var(--emp-cor-hibrido-txt); }
+.emp-cor-remoto { --c: var(--emp-cor-remoto); --ct: var(--emp-cor-remoto-txt); }
+.emp-cor-nao_informado { --c: var(--emp-cor-nao_informado); --ct: var(--emp-cor-nao_informado-txt); }
+.emp-cor-clt { --c: var(--emp-cor-clt); --ct: var(--emp-cor-clt-txt); }
+.emp-cor-pj { --c: var(--emp-cor-pj); --ct: var(--emp-cor-pj-txt); }
+.emp-cor-estagio { --c: var(--emp-cor-estagio); --ct: var(--emp-cor-estagio-txt); }
+.emp-cor-temporario { --c: var(--emp-cor-temporario); --ct: var(--emp-cor-temporario-txt); }
+.emp-cor-adzuna { --c: var(--emp-cor-adzuna); --ct: var(--emp-cor-adzuna-txt); }
+.emp-cor-gupy { --c: var(--emp-cor-gupy); --ct: var(--emp-cor-gupy-txt); }
+.emp-cor-infojobs { --c: var(--emp-cor-infojobs); --ct: var(--emp-cor-infojobs-txt); }
+.emp-cor-empregos { --c: var(--emp-cor-empregos); --ct: var(--emp-cor-empregos-txt); }
+.emp-cor-remotar { --c: var(--emp-cor-remotar); --ct: var(--emp-cor-remotar-txt); }
+.emp-cor-pci { --c: var(--emp-cor-pci); --ct: var(--emp-cor-pci-txt); }
+.emp-badge { height: 24px; padding: 0 9px; border-radius: 7px; font-size: .76rem; font-weight: 600; line-height: 1; border: 0; }
+.emp-badge.emp-cor { color: var(--ct); background: var(--c); }
+.emp-badge.emp-cor .ic { width: 13px; height: 13px; }
+.emp-badge.emp-cor .emp-b-aprox { opacity: .85; }
+.emp-b-uf.emp-badge { border: 1px solid color-mix(in srgb, var(--emp-concurso) 40%, transparent); }
+.emp-tambem { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: .74rem; color: var(--suave); }
+.emp-badge.emp-mini { height: 18px; padding: 0 6px; border-radius: 5px; font-size: .68rem; }
+.pilulas label.emp-cor input + span { border-color: var(--c); background: color-mix(in srgb, var(--c) 9%, var(--card)); color: var(--texto); }
+.pilulas label.emp-cor:hover input:not(:checked) + span { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--card)); }
+.pilulas label.emp-cor input:checked + span { background: var(--c); color: var(--ct); border-color: var(--c); box-shadow: none; }
+.pilulas label.emp-cor span .ic { width: 14px; height: 14px; }
+.pilulas label.emp-cor input + span span.emp-conta { color: inherit; background: color-mix(in srgb, var(--c) 16%, transparent); }
+.pilulas label.emp-cor input:checked + span span.emp-conta { color: var(--ct); background: color-mix(in srgb, var(--ct) 22%, transparent); }
+.adm-fonte-topo h3 .emp-badge { height: 28px; font-size: .9rem; padding: 0 11px; }
+.adm-tabela .emp-badge { vertical-align: middle; }

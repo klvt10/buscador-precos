@@ -1706,6 +1706,9 @@ const listaDe = (x) => (Array.isArray(x) ? x : []);
 const numeroOu = (v, padrao = 0) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : padrao);
 // Nome legível de cada fonte (cartão, filtros, alerta e administração); fonte nova cai na regra genérica.
 const FONTES_NOMES = { adzuna: 'Adzuna', gupy: 'Gupy', pci: 'PCI Concursos', infojobs: 'Infojobs', empregos: 'Empregos.com.br', remotar: 'Remotar' };
+// Cor fixa por valor (modelo, contrato e fonte): classe emp-cor-<valor>; a cor mora nos tokens do CSS.
+const classeCor = (valor) => `emp-cor emp-cor-${String(valor || 'nao_informado').toLowerCase().replace(/[^a-z0-9_-]/g, '')}`;
+const badgeFonte = (f, mini = false) => el('span', { class: `emp-badge${mini ? ' emp-mini' : ''} ${classeCor(f)}` }, nomeFonteEmp(f));
 const nomeFonteEmp = (f) => (!f ? '—' : FONTES_NOMES[f] || (String(f).length <= 3 ? String(f).toUpperCase() : String(f)[0].toUpperCase() + String(f).slice(1)));
 
 // Data ISO, milissegundos ou {em}: devolve milissegundos ou null.
@@ -2012,11 +2015,11 @@ function campoChips(caixa, { rotuloId, placeholder, max = 20, aoMudar }) {
 }
 
 // Pílulas de múltipla escolha (checkbox): opcoes = [[valor, rótulo, contagem?]].
-// Modelo e contrato levam a classe do badge (emp-b-presencial…) para filtro e cartão terem a mesma cor.
+// Modelo, contrato e fonte levam a classe de cor do badge (emp-cor-…): filtro e cartão com a mesma cor.
 function pilulasMulti(caixa, nome, opcoes, marcados) {
   const sel = new Set(listaDe(marcados));
-  const comBadge = nome === 'modelo' || nome === 'contrato';
-  caixa.replaceChildren(...opcoes.map(([valor, rotulo, n]) => el('label', comBadge ? { class: `emp-b-${valor}` } : {},
+  const comBadge = ['modelo', 'contrato', 'fonte', 'fontes'].includes(nome);
+  caixa.replaceChildren(...opcoes.map(([valor, rotulo, n]) => el('label', comBadge ? { class: classeCor(valor) } : {},
     Object.assign(el('input', { type: 'checkbox', name: nome, value: valor }), { checked: sel.has(valor) }),
     el('span', {}, nome === 'modelo' && ICONE_MODELO[valor] ? icone(ICONE_MODELO[valor]) : null, rotulo, n != null ? el('span', { class: 'emp-conta' }, String(n)) : null))));
 }
@@ -2305,8 +2308,8 @@ const VAZIO_ACHADOS = {
 const ICONE_MODELO = { presencial: 'predio', hibrido: 'metade', remoto: 'casa' };
 
 function badgeModelo(v) {
-  if (!v.modelo) return el('span', { class: 'emp-badge emp-b-sem-modelo' }, 'Modelo não informado');
-  return el('span', { class: `emp-badge emp-b-${v.modelo}` }, ICONE_MODELO[v.modelo] ? icone(ICONE_MODELO[v.modelo]) : null, MODELOS[v.modelo] || v.modelo,
+  if (!v.modelo) return el('span', { class: `emp-badge ${classeCor('nao_informado')}` }, 'Modelo não informado');
+  return el('span', { class: `emp-badge ${classeCor(v.modelo)}` }, ICONE_MODELO[v.modelo] ? icone(ICONE_MODELO[v.modelo]) : null, MODELOS[v.modelo] || v.modelo,
     v.modelo_inferido ? el('span', { class: 'emp-b-aprox', title: 'Modelo deduzido do texto do anúncio' }, 'aprox.') : null);
 }
 
@@ -2379,11 +2382,12 @@ function cartaoAchado(a, { aba, aoMudar }) {
   } else {
     const m = badgeModelo(v);
     if (m) badges.append(m);
-    if (v.contrato) badges.append(el('span', { class: `emp-badge emp-b-${v.contrato}` }, CONTRATOS[v.contrato] || v.contrato));
+    if (v.contrato) badges.append(el('span', { class: `emp-badge ${classeCor(v.contrato)}` }, CONTRATOS[v.contrato] || v.contrato));
   }
   // Mesma vaga vista em outras fontes: "via Gupy · também em Adzuna, Infojobs".
-  const tambem = [...new Set(listaDe(v.fontes_tambem).filter((x) => x && x !== v.fonte))].map(nomeFonteEmp);
-  if (v.fonte) badges.append(el('span', { class: 'emp-badge emp-b-fonte' }, `via ${nomeFonteEmp(v.fonte)}${tambem.length ? ` · também em ${tambem.join(', ')}` : ''}`));
+  const tambem = [...new Set(listaDe(v.fontes_tambem).filter((x) => x && x !== v.fonte))];
+  if (v.fonte) badges.append(badgeFonte(v.fonte));
+  if (tambem.length) badges.append(el('span', { class: 'emp-tambem' }, 'também em', ...tambem.map((x) => badgeFonte(x, true))));
 
   const abrir = link
     ? el('a', { class: 'btn primario pequeno', href: link, target: '_blank', rel: 'noopener noreferrer' }, concurso ? 'Abrir edital' : 'Abrir vaga', icone('externo'))
@@ -2703,7 +2707,7 @@ function desenharGraficoEmp(painel) {
       datasets: nomes.map((nome, i) => ({
         label: nomeFonteEmp(nome),
         data: serie.map((d) => numeroOu(d?.por_fonte?.[nome]?.vagas_novas)),
-        backgroundColor: cor(`--emp-serie-${(i % 4) + 1}`),
+        backgroundColor: cor(`--emp-cor-${nome}`) || cor(`--emp-serie-${(i % 4) + 1}`),
         borderRadius: 3,
         maxBarThickness: 28,
       })),
@@ -2766,7 +2770,7 @@ function desenharFontesEmp(caixa, lista, recarregar) {
     const linha = (rotulo, valor, cls) => el('div', {}, el('dt', {}, rotulo), el('dd', cls ? { class: cls } : {}, valor));
     return el('article', { class: `adm-fonte ${estado}` },
       el('header', { class: 'adm-fonte-topo' },
-        el('div', {}, el('h3', {}, nomeFonteEmp(f.nome))),
+        el('div', {}, el('h3', {}, badgeFonte(f.nome))),
         el('label', { class: 'interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }))),
       el('p', { class: 'adm-fonte-estado' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }), texto),
       el('dl', { class: 'adm-fonte-dados' },
@@ -2819,7 +2823,7 @@ function desenharColetasEmp(caixa, coletas) {
       return [
         ini ? dataHora(ini) : fim ? dataHora(fim) : '—',
         c.profissao || c.busca?.profissao || (c.busca_id != null ? String(c.busca_id) : '—'),
-        nomeFonteEmp(c.fonte),
+        c.fonte ? badgeFonte(c.fonte) : '—',
         falhou ? el('span', { class: 'emp-erro' }, c.erro || 'falhou') : el('span', { class: 'emp-ok' }, 'ok'),
         String(numeroOu(c.requisicoes)),
         `${numeroOu(c.vagas_novas)} / ${numeroOu(c.vagas_total)}`,
