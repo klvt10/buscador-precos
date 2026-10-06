@@ -19,11 +19,12 @@ https://pedro.tradehunter.com.br/passagens/. Conversa com o backend (Rust, outro
 | `#/admin` | administração (só admin): visão geral, sites (situação, chave, saída e reserva com recomendação), alertas ligados e usuários; abas em `#/admin/sites`, `/alertas`, `/usuarios` |
 | `#/admin/alertas/<id>` | detalhe de qualquer alerta, só leitura (só admin) |
 | `#/conta` | nome, troca de senha, sair de todos os aparelhos, apagar conta |
-| `#/empregos` | buscas de emprego do usuário (até 3): profissão, cidades, condições, contadores novos/total/favoritos, última coleta, Buscar agora (1 a cada 10 min), ligar/pausar e aviso no WhatsApp |
-| `#/empregos/nova` | nova busca: profissão, termos do título (sugeridos pelo servidor ao sair do campo profissão), palavras a excluir, 1 a 3 cidades com UF, remoto, modelo, contrato, salário mínimo por mês, concursos, WhatsApp |
-| `#/empregos/<id>/editar` | edição da busca e Apagar busca |
-| `#/empregos/<id>` | achados da busca: Novos, Todos ou Favoritos, 30 por página; cada vaga com Abrir vaga, Visto, Favorito e Descartar (esconde esse empregador + título para sempre); concurso com link do edital |
-| `#/admin/empregos` | administração de Empregos (só admin): números do dia, vagas novas por fonte em 14 dias, fontes com ligar/desligar, todas as buscas com Coletar, coletas e envios recentes |
+| `#/empregos` | buscas de emprego do usuário (até 3): profissão, cidades, termos, contadores novos/total/favoritos, última coleta, coleta ligada/pausada, selo do alerta (ligado/desligado, com atalho), Buscar agora (1 a cada 10 min) |
+| `#/empregos/nova` | nova busca, só o escopo da coleta: profissão, termos do título (sugeridos pelo servidor ao sair do campo profissão), 1 a 3 cidades com UF, remoto de qualquer lugar, concursos, ligada |
+| `#/empregos/<id>/editar` | edição do escopo da busca e Apagar busca |
+| `#/empregos/<id>/alerta` | alerta no WhatsApp da busca: ligado, modelo, contrato, salário mínimo e sem salário, palavras que descartam, fontes, concursos, horário; Enviar teste agora (critérios salvos) |
+| `#/empregos/<id>?filtros` | resultados da busca: Novos, Todos ou Favoritos; filtros aplicados no servidor e guardados na query do endereço (`modelo`, `contrato`, `fonte` em lista; `salario_min`, `sem_salario=0`, `dias`, `q`, `uf`, `ordenar`), contagens por modelo/contrato/fonte, total, Limpar filtros, 30 por página; cada vaga com Abrir vaga, Visto, Favorito e Descartar (esconde esse empregador + título para sempre); concurso com link do edital |
+| `#/admin/empregos` | administração de Empregos (só admin): números do dia, vagas novas por fonte em 14 dias, fontes com ligar/desligar, todas as buscas (situação, alerta ligado/desligado, Coletar), coletas e envios recentes |
 
 A barra de cima tem duas abas principais, **Passagens** (alertas, `#/alertas`, `#/novo`…) e **Empregos**
 (`#/empregos…`), mais Conta e Administração; marca, título e aba ativa (`aria-current`) seguem o endereço.

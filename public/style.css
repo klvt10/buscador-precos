@@ -959,6 +959,37 @@ body:not(.admin) [data-so-admin] { display: none; }
 .emp-achado-acoes .emp-descartar:hover { color: var(--vermelho); }
 .emp-mais { display: flex; justify-content: center; }
 
+/* Alerta (selo no cartão e tela própria) */
+.emp-selo-alerta { display: inline-flex; align-items: center; gap: 6px; height: 40px; font-size: .88rem; color: var(--suave); text-decoration: none; }
+.emp-selo-alerta .ic { width: 16px; height: 16px; }
+.emp-selo-alerta.ligado { color: var(--verde); font-weight: 600; }
+.emp-selo-editar { color: var(--primaria); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+.emp-selo-alerta:hover .emp-selo-editar { text-decoration-thickness: 2px; }
+.emp-alerta-liga { gap: 4px; }
+.emp-horario { display: grid; grid-template-columns: repeat(2, minmax(0, 160px)); gap: 12px; }
+.emp-horario select, .emp-barra select {
+  width: 100%; min-width: 0; height: 44px; padding: 0 8px; font: inherit; color: var(--texto);
+  background: var(--fundo); border: 1px solid var(--borda); border-radius: 10px; cursor: pointer;
+}
+.emp-horario select:focus, .emp-barra select:focus { outline: none; background: var(--card); border-color: var(--primaria); box-shadow: 0 0 0 3px var(--primaria-suave); }
+.emp-conta { margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: .75rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--suave); background: var(--fundo-2); }
+.pilulas span.emp-conta, .interruptor span.emp-conta { display: inline; border: 0; box-shadow: none; padding: 0 6px; margin-left: 6px; font-size: .75rem; font-weight: 600; background: var(--fundo-2); color: var(--suave); }
+.pilulas-soltas input:checked + span span.emp-conta { color: var(--primaria-texto); background: color-mix(in srgb, var(--primaria-texto) 22%, transparent); }
+.emp-conta:empty { display: none; }
+
+/* Resultados: barra de filtros */
+.emp-total { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.emp-barra { gap: 0; }
+.emp-barra > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; list-style: none; }
+.emp-barra > summary::-webkit-details-marker { display: none; }
+.emp-barra > summary::after { content: "▾"; margin-left: auto; color: var(--suave); transition: transform .15s; }
+.emp-barra:not([open]) > summary::after { transform: rotate(-90deg); }
+.emp-barra-grade { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 14px 16px; margin-top: 14px; min-width: 0; }
+.emp-barra-texto input { width: 100%; }
+.emp-barra-largo { grid-column: 1 / -1; }
+.emp-barra-salario { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 20px; min-width: 0; }
+.emp-barra .emp-grupo legend { margin-bottom: 6px; }
+
 /* Administração › Empregos */
 .emp-adm { display: grid; gap: 16px; min-width: 0; }
 .emp-grafico { height: 280px; min-width: 0; }
@@ -976,6 +1007,8 @@ body:not(.admin) [data-so-admin] { display: none; }
   .barra-nav a { padding: 7px 8px; }
   .emp-cartao { padding: 16px; }
   .emp-topo-acao, .emp-topo-acao .btn { width: 100%; }
+  .emp-barra-grade { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .emp-barra-texto { grid-column: 1 / -1; }
   .emp-acoes .btn { flex: 1 1 auto; }
   .emp-cidade { grid-template-columns: minmax(0, 1fr) 84px 44px; }
   .emp-salario input { max-width: none; }

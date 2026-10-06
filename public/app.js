@@ -1682,12 +1682,12 @@ function desenharOperacao(painel, e) {
 }
 
 // --- Empregos -----------------------------------------------------------------------------------
-// Buscas de vaga e concurso: até 3 por usuário. O servidor coleta, casa e avisa no WhatsApp; a tela
-// lista as buscas, edita, mostra os achados e muda o estado de cada um (visto, favorito, descartado).
+// Busca = o que coletar (profissão, termos, cidades). Resultados = busca detalhada, com filtros
+// aplicados no servidor e guardados no endereço. Alerta = critérios do aviso no WhatsApp, à parte.
 
 const UFS = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
-const MODELOS = { qualquer: 'Qualquer modelo', presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
-const CONTRATOS = { qualquer: 'Qualquer contrato', clt: 'CLT', pj: 'PJ', estagio: 'Estágio', temporario: 'Temporário' };
+const MODELOS = { presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto' };
+const CONTRATOS = { clt: 'CLT', pj: 'PJ', estagio: 'Estágio', temporario: 'Temporário' };
 const LIMITE_BUSCAS = 3;
 const listaDe = (x) => (Array.isArray(x) ? x : []);
 const numeroOu = (v, padrao = 0) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : padrao);
@@ -1725,6 +1725,11 @@ function valorMoeda(txt) {
   const d = String(txt || '').split(',')[0].replace(/\D/g, '');
   return d ? Number(d) : null;
 }
+// Campo de valor em reais: aceita só números ao digitar e mostra formatado ao sair.
+function campoMoeda(entrada, valor) {
+  entrada.value = numeroOu(valor, 0) > 0 ? brl(Number(valor)) : '';
+  entrada.addEventListener('blur', () => { const v = valorMoeda(entrada.value); entrada.value = v ? brl(v) : ''; });
+}
 
 function textoSalario(v) {
   const a = v.salario_min != null ? Number(v.salario_min) : null;
@@ -1738,7 +1743,6 @@ const textoCidades = (b) => {
   const c = listaDe(b.cidades).map((x) => (x.uf ? `${x.cidade}/${x.uf}` : x.cidade)).filter(Boolean).join(' · ');
   return `${c || 'Sem cidade'}${b.aceita_remoto ? ' · remoto de qualquer lugar' : ''}`;
 };
-const textoMinimo = (b) => (numeroOu(b.salario_minimo, 0) > 0 ? `a partir de ${brl(Number(b.salario_minimo))}` : 'sem mínimo');
 
 // Lista do servidor: { buscas, limite, restantes } ou só a lista.
 function lerBuscas(r) {
@@ -1747,23 +1751,22 @@ function lerBuscas(r) {
   const restantes = Number.isFinite(r?.restantes) ? r.restantes : Math.max(0, limite - buscas.length);
   return { buscas, limite, restantes };
 }
+async function buscaPorId(id) {
+  const { buscas } = lerBuscas(await api('empregos/buscas'));
+  return buscas.find((b) => String(b.id) === id) || null;
+}
 
-// Corpo completo da busca para PUT (o servidor recebe a busca inteira, como nos alertas).
+// Corpo da busca para PUT: só o escopo da coleta (o alerta tem rota própria).
 const corpoBusca = (b) => ({
   profissao: b.profissao || '',
   termos: listaDe(b.termos),
   cidades: listaDe(b.cidades).map((c) => ({ cidade: c.cidade, uf: c.uf })),
   aceita_remoto: !!b.aceita_remoto,
-  modelo: b.modelo || 'qualquer',
-  contrato: b.contrato || 'qualquer',
-  salario_minimo: numeroOu(b.salario_minimo, 0) > 0 ? Number(b.salario_minimo) : null,
-  incluir_sem_salario: b.incluir_sem_salario !== false,
-  excluir: listaDe(b.excluir),
   concursos: !!b.concursos,
-  alertar: b.alertar !== false,
   ativa: b.ativa !== false,
 });
 const buscaDaResposta = (r) => r?.busca || (r && r.id != null ? r : null);
+const alertaLigado = (b) => !!b?.alerta?.ligado;
 
 // Mensagem curta ao lado de um botão; as de sucesso somem sozinhas.
 function avisar(msg, texto, classe = '') {
@@ -1780,7 +1783,7 @@ async function pedirColeta(caminho, botao, msg) {
   avisar(msg, 'Pedindo a busca…');
   try {
     await api(caminho, { method: 'POST', body: {} });
-    avisar(msg, 'Busca pedida. Os achados novos aparecem em alguns minutos.', 'ok');
+    avisar(msg, 'Busca pedida. As vagas novas aparecem em alguns minutos.', 'ok');
   } catch (e) {
     avisar(msg, e.status === 429 ? 'Houve uma busca há pouco: aguarde 10 min para buscar de novo.' : e.message, 'erro');
   } finally {
@@ -1807,18 +1810,17 @@ function ultimaColeta(b) {
   return erro ? el('div', { class: 'emp-coleta-caixa' }, p, el('p', { class: 'emp-coleta-erro' }, `Falha na última coleta: ${erro}`)) : p;
 }
 
-function chipsBusca(b) {
-  return el('div', { class: 'ca-chips' },
-    el('span', { class: 'chip' }, MODELOS[b.modelo] || MODELOS.qualquer),
-    el('span', { class: 'chip' }, CONTRATOS[b.contrato] || CONTRATOS.qualquer),
-    el('span', { class: 'chip' }, textoMinimo(b)),
-    b.concursos ? el('span', { class: 'chip' }, 'com concursos') : null);
-}
-
 function termosBusca(b) {
   const termos = listaDe(b.termos);
   if (!termos.length) return document.createDocumentFragment(); // vai direto em append()
   return el('ul', { class: 'emp-termos', 'aria-label': 'Termos no título' }, ...termos.map((x) => el('li', {}, x)));
+}
+
+// Selo do alerta com atalho para a tela de alerta.
+function seloAlerta(b) {
+  const ligado = alertaLigado(b);
+  return el('a', { class: `emp-selo-alerta${ligado ? ' ligado' : ''}`, href: `#/empregos/${encodeURIComponent(b.id)}/alerta`, title: 'Editar o alerta no WhatsApp' },
+    icone('sino'), ligado ? 'Alerta ligado' : 'Alerta desligado', el('span', { class: 'emp-selo-editar' }, 'editar'));
 }
 
 function cartaoBusca(b) {
@@ -1829,25 +1831,22 @@ function cartaoBusca(b) {
     card.classList.toggle('pausada', b.ativa === false);
     estado.textContent = b.ativa === false ? 'Pausada' : 'Ligada';
   };
-  const chave = (rotulo, campo) => {
-    const x = el('input', { type: 'checkbox', role: 'switch' });
-    x.checked = b[campo] !== false;
-    x.addEventListener('change', async () => {
-      const valor = x.checked;
-      x.disabled = true;
-      avisar(msg, 'Gravando…');
-      try {
-        const r = await api(`empregos/buscas/${encodeURIComponent(b.id)}`, { method: 'PUT', body: { ...corpoBusca(b), [campo]: valor } });
-        Object.assign(b, buscaDaResposta(r) || { [campo]: valor });
-        marcarEstado();
-        avisar(msg, campo === 'ativa' ? (valor ? 'Busca ligada.' : 'Busca pausada.') : (valor ? 'Avisos no WhatsApp ligados.' : 'Avisos no WhatsApp desligados.'), 'ok');
-      } catch (e) {
-        x.checked = !valor;
-        avisar(msg, e.message, 'erro');
-      } finally { x.disabled = false; }
-    });
-    return el('label', { class: 'interruptor emp-interruptor' }, x, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }), el('span', {}, rotulo));
-  };
+  const chave = el('input', { type: 'checkbox', role: 'switch' });
+  chave.checked = b.ativa !== false;
+  chave.addEventListener('change', async () => {
+    const valor = chave.checked;
+    chave.disabled = true;
+    avisar(msg, 'Gravando…');
+    try {
+      const r = await api(`empregos/buscas/${encodeURIComponent(b.id)}`, { method: 'PUT', body: { ...corpoBusca(b), ativa: valor } });
+      Object.assign(b, buscaDaResposta(r) || { ativa: valor });
+      marcarEstado();
+      avisar(msg, valor ? 'Busca ligada.' : 'Busca pausada: sem coletas até religar.', 'ok');
+    } catch (e) {
+      chave.checked = !valor;
+      avisar(msg, e.message, 'erro');
+    } finally { chave.disabled = false; }
+  });
   const buscar = el('button', { type: 'button', class: 'btn' }, icone('lupa'), 'Buscar agora');
   buscar.addEventListener('click', () => pedirColeta(`empregos/buscas/${encodeURIComponent(b.id)}/coletar`, buscar, msg));
   marcarEstado();
@@ -1858,13 +1857,14 @@ function cartaoBusca(b) {
         el('h2', {}, b.profissao || 'Busca sem profissão'),
         el('p', { class: 'emp-local' }, textoCidades(b))),
       estado),
-    chipsBusca(b),
     termosBusca(b),
     contadoresBusca(b),
     ultimaColeta(b),
-    el('div', { class: 'emp-chaves' }, chave('Ligada', 'ativa'), chave('Avisar no WhatsApp', 'alertar')),
+    el('div', { class: 'emp-chaves' },
+      el('label', { class: 'interruptor emp-interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }), el('span', {}, 'Coleta ligada')),
+      seloAlerta(b)),
     el('div', { class: 'emp-acoes' },
-      el('a', { class: 'btn primario', href: `#/empregos/${encodeURIComponent(b.id)}` }, 'Ver achados'),
+      el('a', { class: 'btn primario', href: `#/empregos/${encodeURIComponent(b.id)}` }, 'Ver resultados'),
       buscar,
       el('a', { class: 'btn fantasma', href: `#/empregos/${encodeURIComponent(b.id)}/editar` }, 'Editar')),
     msg);
@@ -1883,8 +1883,7 @@ async function telaEmpregos() {
       lugar.replaceChildren(el('a', { class: 'btn primario', href: '#/empregos/nova' }, icone('mais'), 'Nova busca'));
       aviso.hidden = true;
     } else {
-      const b = el('button', { type: 'button', class: 'btn primario', disabled: '', 'aria-describedby': 'emp-aviso-limite' }, icone('mais'), 'Nova busca');
-      lugar.replaceChildren(b);
+      lugar.replaceChildren(el('button', { type: 'button', class: 'btn primario', disabled: '', 'aria-describedby': 'emp-aviso-limite' }, icone('mais'), 'Nova busca'));
       aviso.id = 'emp-aviso-limite';
       aviso.textContent = `Limite de ${limite} ${limite === 1 ? 'busca' : 'buscas'} atingido. Para criar outra, apague uma das buscas em Editar.`;
       aviso.hidden = false;
@@ -1893,7 +1892,7 @@ async function telaEmpregos() {
       caixa.replaceChildren(el('div', { class: 'vazio-grande emp-vazio' },
         el('span', { class: 'vazio-icone emp-vazio-icone' }, icone('maleta', '')),
         el('h2', {}, 'Nenhuma busca de emprego ainda'),
-        el('p', { class: 'nota' }, 'Uma busca guarda a profissão, as cidades e as condições desejadas. Sites de vagas e de concursos são consultados várias vezes ao dia; as vagas novas que combinam aparecem aqui e chegam no WhatsApp.'),
+        el('p', { class: 'nota' }, 'Uma busca guarda a profissão e as cidades. Sites de vagas e de concursos são consultados várias vezes ao dia; os resultados aparecem aqui com filtros de modelo, contrato e salário, e o alerta no WhatsApp é opcional.'),
         el('a', { class: 'btn primario grande', href: '#/empregos/nova' }, icone('mais'), 'Criar a primeira busca')));
       return;
     }
@@ -1970,6 +1969,19 @@ function campoChips(caixa, { rotuloId, placeholder, max = 20, aoMudar }) {
   };
 }
 
+// Pílulas de múltipla escolha (checkbox): opcoes = [[valor, rótulo, contagem?]].
+function pilulasMulti(caixa, nome, opcoes, marcados) {
+  const sel = new Set(listaDe(marcados));
+  caixa.replaceChildren(...opcoes.map(([valor, rotulo, n]) => el('label', {},
+    Object.assign(el('input', { type: 'checkbox', name: nome, value: valor }), { checked: sel.has(valor) }),
+    el('span', {}, rotulo, n != null ? el('span', { class: 'emp-conta' }, String(n)) : null))));
+}
+const marcadosEm = (caixa) => $$('input:checked', caixa).map((x) => x.value);
+
+function telaErroEmp(texto, voltar = '#/empregos') {
+  $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', { class: 'nota erro' }, texto), el('a', { href: voltar }, '← Minhas buscas')));
+}
+
 let idCidade = 0;
 
 async function telaEmpForm(id) {
@@ -1978,22 +1990,13 @@ async function telaEmpForm(id) {
   const msg = $('[data-msg]', f);
   let busca = null;
   if (id) {
-    try {
-      const { buscas } = lerBuscas(await api('empregos/buscas'));
-      busca = buscas.find((b) => String(b.id) === id) || null;
-    } catch (e) {
-      $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', { class: 'nota erro' }, e.message), el('a', { href: '#/empregos' }, '← Minhas buscas')));
-      return;
-    }
-    if (!busca) {
-      $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', {}, 'Busca não encontrada.'), el('a', { href: '#/empregos' }, '← Minhas buscas')));
-      return;
-    }
+    try { busca = await buscaPorId(id); } catch (e) { telaErroEmp(e.message); return; }
+    if (!busca) { telaErroEmp('Busca não encontrada.'); return; }
     $('[data-titulo]', t).textContent = 'Editar busca';
     $('[data-salvar]', f).textContent = 'Salvar alterações';
     const voltar = $('[data-voltar]', t);
     voltar.href = `#/empregos/${encodeURIComponent(id)}`;
-    voltar.replaceChildren(icone('seta'), 'Achados da busca');
+    voltar.replaceChildren(icone('seta'), 'Resultados da busca');
     $('[data-cancelar]', f).href = `#/empregos/${encodeURIComponent(id)}`;
     $('[data-apagar-lugar]', t).hidden = false;
     document.title = `${busca.profissao || 'Busca'} · Buscador de Empregos`;
@@ -2004,7 +2007,6 @@ async function telaEmpForm(id) {
   const dicaPadrao = dicaTermos.textContent;
   let sugeridos = new Set();
   const termos = campoChips($('[data-chips="termos"]', f), { rotuloId: 'emp-termos-rotulo', placeholder: 'Ex.: fono' });
-  const excluir = campoChips($('[data-chips="excluir"]', f), { rotuloId: 'emp-excluir-rotulo', placeholder: 'Ex.: coordenador' });
   let pedidoSugestao = 0;
   f.profissao.addEventListener('change', async () => {
     const profissao = f.profissao.value.trim();
@@ -2038,14 +2040,14 @@ async function telaEmpForm(id) {
   };
   const linhaCidade = (c = {}) => {
     const k = ++idCidade;
-    const cidade = el('input', { type: 'text', name: 'cidade', maxlength: '60', placeholder: 'Ex.: Porto Alegre', autocomplete: 'off' });
+    const cidade = el('input', { type: 'text', name: 'cidade', id: `emp-cidade-${k}`, maxlength: '60', placeholder: 'Ex.: Porto Alegre', autocomplete: 'off' });
     cidade.value = c.cidade || '';
-    const uf = el('select', { name: 'uf' }, el('option', { value: '' }, 'UF'), ...UFS.map((u) => el('option', { value: u }, u)));
+    const uf = el('select', { name: 'uf', id: `emp-uf-${k}` }, el('option', { value: '' }, 'UF'), ...UFS.map((u) => el('option', { value: u }, u)));
     uf.value = UFS.includes(c.uf) ? c.uf : '';
     const tirar = el('button', { type: 'button', class: 'icone-btn', 'data-tirar-cidade': '', 'aria-label': 'Tirar esta cidade', title: 'Tirar esta cidade' }, icone('fechar', ''));
     const linha = el('div', { class: 'emp-cidade' },
-      el('label', { class: 'emp-cidade-nome', for: `emp-cidade-${k}` }, el('span', { class: 'rotulo' }, 'Cidade'), Object.assign(cidade, { id: `emp-cidade-${k}` })),
-      el('label', { class: 'emp-cidade-uf', for: `emp-uf-${k}` }, el('span', { class: 'rotulo' }, 'UF'), Object.assign(uf, { id: `emp-uf-${k}` })),
+      el('label', { class: 'emp-cidade-nome', for: cidade.id }, el('span', { class: 'rotulo' }, 'Cidade'), cidade),
+      el('label', { class: 'emp-cidade-uf', for: uf.id }, el('span', { class: 'rotulo' }, 'UF'), uf),
       tirar);
     tirar.addEventListener('click', () => { linha.remove(); acertarCidades(); $('input', caixaCidades)?.focus(); });
     for (const x of [cidade, uf]) x.addEventListener('input', () => { x.removeAttribute('aria-invalid'); erroCidades.textContent = ''; });
@@ -2055,23 +2057,13 @@ async function telaEmpForm(id) {
   };
   maisCidade.addEventListener('click', () => linhaCidade().focus());
 
-  // Salário: aceita "4500", "4.500" ou "R$ 4.500,00"; ao sair do campo mostra em reais.
-  const salario = f.salario_minimo;
-  salario.addEventListener('blur', () => { const v = valorMoeda(salario.value); salario.value = v ? brl(v) : ''; });
-
   if (busca) {
     f.profissao.value = busca.profissao || '';
     termos.definir(busca.termos);
-    excluir.definir(busca.excluir);
     const cs = listaDe(busca.cidades);
     if (cs.length) cs.slice(0, 3).forEach((c) => linhaCidade(c)); else linhaCidade();
     f.aceita_remoto.checked = !!busca.aceita_remoto;
-    f.modelo.value = MODELOS[busca.modelo] ? busca.modelo : 'qualquer';
-    f.contrato.value = CONTRATOS[busca.contrato] ? busca.contrato : 'qualquer';
-    salario.value = numeroOu(busca.salario_minimo, 0) > 0 ? brl(Number(busca.salario_minimo)) : '';
-    f.incluir_sem_salario.checked = busca.incluir_sem_salario !== false;
     f.concursos.checked = !!busca.concursos;
-    f.alertar.checked = busca.alertar !== false;
     f.ativa.checked = busca.ativa !== false;
   } else {
     linhaCidade();
@@ -2082,10 +2074,9 @@ async function telaEmpForm(id) {
     ev.preventDefault();
     avisar(msg, '');
     erroCidades.textContent = '';
-    const falha = (texto, campo) => { avisar(msg, texto, 'erro'); if (campo) { campo.setAttribute('aria-invalid', 'true'); campo.focus(); } };
     const profissao = f.profissao.value.trim();
-    if (!profissao) return falha('Informe a profissão ou o cargo.', f.profissao);
-    if (!termos.valores.length) return (termos.focar(), avisar(msg, 'Acrescente pelo menos um termo para o título da vaga.', 'erro'));
+    if (!profissao) { f.profissao.setAttribute('aria-invalid', 'true'); f.profissao.focus(); return avisar(msg, 'Informe a profissão ou o cargo.', 'erro'); }
+    if (!termos.valores.length) { termos.focar(); return avisar(msg, 'Acrescente pelo menos um termo para o título da vaga.', 'erro'); }
     const cidades = [];
     for (const l of linhas()) {
       const c = $('input', l);
@@ -2107,21 +2098,7 @@ async function telaEmpForm(id) {
       erroCidades.textContent = 'Informe pelo menos uma cidade com a UF.';
       return avisar(msg, 'Confira as cidades.', 'erro');
     }
-    const minimo = valorMoeda(salario.value);
-    const body = {
-      profissao,
-      termos: termos.valores,
-      cidades,
-      aceita_remoto: f.aceita_remoto.checked,
-      modelo: f.modelo.value,
-      contrato: f.contrato.value,
-      salario_minimo: minimo || null,
-      incluir_sem_salario: f.incluir_sem_salario.checked,
-      excluir: excluir.valores,
-      concursos: f.concursos.checked,
-      alertar: f.alertar.checked,
-      ativa: f.ativa.checked,
-    };
+    const body = { profissao, termos: termos.valores, cidades, aceita_remoto: f.aceita_remoto.checked, concursos: f.concursos.checked, ativa: f.ativa.checked };
     avisar(msg, 'Salvando…');
     enviar(f, async () => {
       const r = busca
@@ -2129,18 +2106,127 @@ async function telaEmpForm(id) {
         : await api('empregos/buscas', { method: 'POST', body });
       const salva = buscaDaResposta(r);
       avisar(msg, 'Salvo.', 'ok');
-      ir(salva?.id != null ? `#/empregos/${encodeURIComponent(salva.id)}` : busca ? `#/empregos/${encodeURIComponent(busca.id)}` : '#/empregos');
+      const alvo = salva?.id ?? busca?.id;
+      ir(alvo != null ? `#/empregos/${encodeURIComponent(alvo)}` : '#/empregos');
     });
   });
 
   $('[data-apagar]', t).addEventListener('click', async (ev) => {
-    if (!busca || !confirm('Apagar esta busca e a lista de vagas encontradas para ela?')) return;
+    if (!busca || !confirm('Apagar esta busca, o alerta e a lista de vagas encontradas para ela?')) return;
     const b = ev.currentTarget;
     b.disabled = true;
     try {
       await api(`empregos/buscas/${encodeURIComponent(busca.id)}`, { method: 'DELETE' });
       ir('#/empregos');
     } catch (e) { b.disabled = false; alert(e.message); }
+  });
+}
+
+// Hora "08", "08:00" ou 8 → 8; fora de 0–23 → padrão.
+const horaDe = (v, padrao) => { const h = parseInt(String(v ?? ''), 10); return Number.isInteger(h) && h >= 0 && h <= 23 ? h : padrao; };
+
+async function telaEmpAlerta(id) {
+  const t = montar('t-emp-alerta');
+  const f = $('form', t);
+  const msg = $('[data-msg]', f);
+  const testar = $('[data-testar]', f);
+  const dicaTestar = $('[data-testar-dica]', f);
+  const voltar = $('[data-voltar]', t);
+  voltar.href = `#/empregos/${encodeURIComponent(id)}`;
+  let busca = null;
+  let alerta = null;
+  let fontesConhecidas = [];
+  try {
+    const [b, a, ach] = await Promise.all([
+      buscaPorId(id),
+      api(`empregos/buscas/${encodeURIComponent(id)}/alerta`).catch((e) => ({ erro_tela: e })),
+      api(`empregos/buscas/${encodeURIComponent(id)}/achados?filtro=todos&pagina=1`).catch(() => null),
+    ]);
+    busca = b;
+    if (!busca) { telaErroEmp('Busca não encontrada.'); return; }
+    alerta = a?.erro_tela ? busca.alerta || null : a?.alerta || a;
+    if (a?.erro_tela && !alerta) { telaErroEmp(a.erro_tela.message, `#/empregos/${encodeURIComponent(id)}`); return; }
+    fontesConhecidas = listaDe(a?.fontes_disponiveis).length ? a.fontes_disponiveis : Object.keys(ach?.facetas?.por_fonte || {});
+  } catch (e) { telaErroEmp(e.message); return; }
+  alerta = alerta || {};
+  $('[data-titulo]', t).textContent = `Alerta: ${busca.profissao || 'busca'}`;
+  document.title = `Alerta · ${busca.profissao || 'Busca'} · Buscador de Empregos`;
+
+  pilulasMulti($('[data-multi="modelo"]', f), 'modelo', Object.entries(MODELOS), alerta.modelo);
+  pilulasMulti($('[data-multi="contrato"]', f), 'contrato', Object.entries(CONTRATOS), alerta.contrato);
+  const fontes = [...new Set([...fontesConhecidas, ...listaDe(alerta.fontes)])];
+  $('[data-fontes-grupo]', f).hidden = !fontes.length;
+  pilulasMulti($('[data-multi="fontes"]', f), 'fontes', fontes.map((x) => [x, nomeFonteEmp(x)]), alerta.fontes);
+  campoMoeda(f.salario_minimo, alerta.salario_minimo);
+  f.incluir_sem_salario.checked = alerta.incluir_sem_salario !== false;
+  f.concursos.checked = !!alerta.concursos;
+  f.ligado.checked = !!alerta.ligado;
+  const excluir = campoChips($('[data-chips="excluir"]', f), { rotuloId: 'emp-excluir-rotulo', placeholder: 'Ex.: coordenador', aoMudar: () => mudou() });
+  excluir.definir(alerta.excluir);
+  for (const sel of $$('[data-hora]', f)) sel.replaceChildren(...Array.from({ length: 24 }, (_, h) => el('option', { value: String(h) }, `${String(h).padStart(2, '0')}:00`)));
+  f.horario_ini.value = String(horaDe(alerta.horario_ini, 8));
+  f.horario_fim.value = String(horaDe(alerta.horario_fim, 21));
+
+  const estado = () => {
+    $('[data-estado-alerta]', f).textContent = f.ligado.checked
+      ? 'Vagas novas que atendem aos critérios abaixo chegam no WhatsApp do celular da conta.'
+      : 'Desligado: nada é enviado. Os resultados continuam sendo coletados e aparecem na página da busca.';
+  };
+  // Teste usa o que está salvo: com alteração pendente, pede para salvar antes.
+  let pendente = false;
+  const mudou = () => {
+    pendente = true;
+    testar.disabled = true;
+    dicaTestar.textContent = 'Há alterações não salvas: salve para testar com os critérios novos.';
+    estado();
+  };
+  f.addEventListener('input', mudou);
+  f.addEventListener('change', mudou);
+  estado();
+
+  f.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const ini = Number(f.horario_ini.value);
+    const fim = Number(f.horario_fim.value);
+    if (fim <= ini) { f.horario_fim.focus(); return avisar(msg, 'O fim do horário precisa ser depois do início.', 'erro'); }
+    const body = {
+      ligado: f.ligado.checked,
+      modelo: marcadosEm($('[data-multi="modelo"]', f)),
+      contrato: marcadosEm($('[data-multi="contrato"]', f)),
+      salario_minimo: valorMoeda(f.salario_minimo.value) || null,
+      incluir_sem_salario: f.incluir_sem_salario.checked,
+      excluir: excluir.valores,
+      fontes: marcadosEm($('[data-multi="fontes"]', f)),
+      concursos: f.concursos.checked,
+      horario_ini: ini,
+      horario_fim: fim,
+    };
+    avisar(msg, 'Salvando…');
+    enviar(f, async () => {
+      await api(`empregos/buscas/${encodeURIComponent(id)}/alerta`, { method: 'PUT', body });
+      pendente = false;
+      dicaTestar.textContent = 'O teste manda agora uma mensagem com até 5 vagas que atendem aos critérios salvos.';
+      avisar(msg, body.ligado ? 'Alerta salvo e ligado.' : 'Alerta salvo (desligado).', 'ok');
+    });
+    // enviar() reabilita os botões ao terminar; o teste segue preso enquanto houver pendência.
+    setTimeout(() => { if (pendente) testar.disabled = true; }, 0);
+  });
+
+  testar.addEventListener('click', async () => {
+    if (pendente) return;
+    testar.disabled = true;
+    testar.classList.add('girando');
+    avisar(msg, 'Enviando teste…');
+    try {
+      const r = await api(`empregos/buscas/${encodeURIComponent(id)}/alerta/testar`, { method: 'POST', body: {} });
+      const n = numeroOu(r?.enviadas);
+      avisar(msg, n ? `Mensagem enviada com ${n} ${n === 1 ? 'vaga' : 'vagas'}.` : 'Nenhuma vaga atende aos critérios agora: nada foi enviado.', n ? 'ok' : '');
+    } catch (e) {
+      avisar(msg, e.status === 429 ? 'Já houve um teste há pouco: aguarde 5 min.' : e.message, 'erro');
+    } finally {
+      testar.classList.remove('girando');
+      setTimeout(() => { testar.disabled = pendente; }, 3000);
+    }
   });
 }
 
@@ -2223,21 +2309,53 @@ function cartaoAchado(a, { aoSumir }) {
   return card;
 }
 
-async function telaEmpAchados(id) {
+// Filtros dos resultados: vivem na query do endereço (#/empregos/ID?modelo=presencial&dias=30).
+const FILTROS_LISTA = ['modelo', 'contrato', 'fonte'];
+function lerFiltros(query) {
+  const p = new URLSearchParams(query || '');
+  const lista = (k) => (p.get(k) || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const f = {
+    filtro: ['novos', 'todos', 'favoritos'].includes(p.get('filtro')) ? p.get('filtro') : null,
+    modelo: lista('modelo'), contrato: lista('contrato'), fonte: lista('fonte'),
+    salario_min: valorMoeda(p.get('salario_min')) || null,
+    sem_salario: p.get('sem_salario') !== '0',
+    dias: ['7', '15', '30', '45'].includes(p.get('dias')) ? p.get('dias') : '',
+    q: (p.get('q') || '').slice(0, 80),
+    uf: UFS.includes(p.get('uf')) ? p.get('uf') : '',
+    ordenar: ['salario', 'empregador'].includes(p.get('ordenar')) ? p.get('ordenar') : 'recentes',
+  };
+  return f;
+}
+// Só o que difere do padrão entra na query.
+function queryFiltros(f) {
+  const p = new URLSearchParams();
+  if (f.filtro) p.set('filtro', f.filtro);
+  for (const k of FILTROS_LISTA) if (f[k].length) p.set(k, f[k].join(','));
+  if (f.salario_min) p.set('salario_min', String(f.salario_min));
+  if (!f.sem_salario) p.set('sem_salario', '0');
+  if (f.dias) p.set('dias', f.dias);
+  if (f.q.trim()) p.set('q', f.q.trim());
+  if (f.uf) p.set('uf', f.uf);
+  if (f.ordenar !== 'recentes') p.set('ordenar', f.ordenar);
+  return p.toString();
+}
+const nFiltrosAtivos = (f) => FILTROS_LISTA.reduce((s, k) => s + (f[k].length ? 1 : 0), 0)
+  + (f.salario_min ? 1 : 0) + (f.sem_salario ? 0 : 1) + (f.dias ? 1 : 0) + (f.q.trim() ? 1 : 0) + (f.uf ? 1 : 0);
+
+async function telaEmpAchados(id, query) {
   const t = montar('t-emp-achados');
   const caixa = $('[data-achados]', t);
   const mais = $('[data-mais]', t);
   const cabeca = $('[data-cabeca]', t);
-  let filtro = 'novos';
+  const barra = $('[data-barra]', t);
+  const fx = lerFiltros(query);
   let pagina = 1;
   let busca = null;
   let pedido = 0;
+  let total = null;
 
   const desenharCabeca = () => {
-    if (!busca) {
-      cabeca.replaceChildren(el('h1', {}, 'Achados da busca'));
-      return;
-    }
+    if (!busca) { cabeca.replaceChildren(el('h1', {}, 'Resultados da busca')); return; }
     document.title = `${busca.profissao || 'Busca'} · Buscador de Empregos`;
     const msg = el('span', { class: 'msg', role: 'status' });
     const buscar = el('button', { type: 'button', class: 'btn primario' }, icone('lupa'), 'Buscar agora');
@@ -2248,22 +2366,79 @@ async function telaEmpAchados(id) {
           el('h1', {}, busca.profissao || 'Busca'),
           el('p', { class: 'emp-local' }, textoCidades(busca))),
         el('span', { class: `emp-estado${busca.ativa === false ? ' pausada' : ''}` }, busca.ativa === false ? 'Pausada' : 'Ligada')),
-      chipsBusca(busca),
       termosBusca(busca),
       contadoresBusca(busca),
       ultimaColeta(busca),
-      el('div', { class: 'emp-acoes' }, buscar, el('a', { class: 'btn', href: `#/empregos/${encodeURIComponent(busca.id)}/editar` }, 'Editar busca'), msg));
+      el('div', { class: 'emp-acoes' },
+        buscar,
+        el('a', { class: 'btn', href: `#/empregos/${encodeURIComponent(busca.id)}/alerta` }, icone('sino'), alertaLigado(busca) ? 'Alerta ligado' : 'Alerta desligado'),
+        el('a', { class: 'btn fantasma', href: `#/empregos/${encodeURIComponent(busca.id)}/editar` }, 'Editar busca'),
+        msg));
   };
 
-  const contar = () => {
-    const n = $$('.emp-achado', caixa).length;
-    $('[data-contagem]', t).textContent = n ? `${n} ${n === 1 ? 'mostrado' : 'mostrados'}${mais.hidden ? '' : ' · há mais'}` : '';
+  // Barra: campos fixos preenchidos pelo estado; pílulas de faceta redesenhadas a cada resposta.
+  const fs = {
+    q: $('input[name=q]', barra), uf: $('select[name=uf]', barra), ordenar: $('select[name=ordenar]', barra),
+    salario: $('input[name=salario_min]', barra), semSalario: $('input[name=sem_salario]', barra),
+  };
+  fs.uf.replaceChildren(el('option', { value: '' }, 'Todas'), ...UFS.map((u) => el('option', { value: u }, u)));
+  const preencherCampos = () => {
+    fs.q.value = fx.q;
+    fs.uf.value = fx.uf;
+    fs.ordenar.value = fx.ordenar;
+    fs.salario.value = fx.salario_min ? brl(fx.salario_min) : '';
+    fs.semSalario.checked = fx.sem_salario;
+    for (const r of $$('input[name=dias]', barra)) r.checked = r.value === fx.dias;
+  };
+  const ROTULOS = { modelo: MODELOS, contrato: CONTRATOS, fonte: {} };
+  let facetas = {};
+  const desenharFacetas = () => {
+    const fonteDe = { modelo: facetas.por_modelo, contrato: facetas.por_contrato, fonte: facetas.por_fonte };
+    for (const k of FILTROS_LISTA) {
+      const contagem = fonteDe[k] || {};
+      const chaves = [...new Set([...Object.keys(ROTULOS[k]), ...Object.keys(contagem), ...fx[k]])];
+      const opcoes = chaves.map((c) => [c, ROTULOS[k][c] || (k === 'fonte' ? nomeFonteEmp(c) : c), contagem[c] != null ? numeroOu(contagem[c]) : (Object.keys(contagem).length ? 0 : null)]);
+      pilulasMulti($(`[data-faceta="${k}"]`, barra), k, opcoes, fx[k]);
+      $(`[data-faceta="${k}"]`, barra).closest('fieldset').hidden = !opcoes.length;
+    }
+    const sem = facetas.sem_salario;
+    $('[data-conta-sem]', barra).textContent = sem != null ? String(numeroOu(sem)) : '';
+  };
+
+  const marcarSituacao = () => {
+    for (const b of $('[data-filtro]', t).children) b.classList.toggle('ativo', b.dataset.f === fx.filtro);
+  };
+  const resumo = () => {
+    const n = nFiltrosAtivos(fx);
+    $('[data-n-filtros]', t).textContent = n ? String(n) : '';
+    $('[data-limpar]', t).hidden = !n && fx.ordenar === 'recentes';
+    const mostrados = $$('.emp-achado', caixa).length;
+    $('[data-total]', t).textContent = total != null
+      ? `${total} ${total === 1 ? 'resultado' : 'resultados'}`
+      : mostrados ? `${mostrados} ${mostrados === 1 ? 'mostrado' : 'mostrados'}${mais.hidden ? '' : ' · há mais'}` : '';
   };
   const vazio = () => {
-    if (!$('.emp-achado', caixa)) caixa.replaceChildren(el('p', { class: 'vazio emp-achados-vazio' }, VAZIO_ACHADOS[filtro]));
-    contar();
+    if (!$('.emp-achado', caixa)) {
+      caixa.replaceChildren(el('p', { class: 'vazio emp-achados-vazio' },
+        nFiltrosAtivos(fx) ? 'Nenhuma vaga com estes filtros. Afrouxe algum filtro ou use “Limpar filtros”.' : VAZIO_ACHADOS[fx.filtro]));
+    }
+    resumo();
   };
-  const carregarAchados = async (reiniciar) => {
+
+  const parametros = () => {
+    const p = new URLSearchParams();
+    p.set('filtro', fx.filtro);
+    for (const k of FILTROS_LISTA) if (fx[k].length) p.set(k, fx[k].join(','));
+    if (fx.salario_min) p.set('salario_min', String(fx.salario_min));
+    p.set('sem_salario', fx.sem_salario ? '1' : '0');
+    if (fx.dias) p.set('dias', fx.dias);
+    if (fx.q.trim()) p.set('q', fx.q.trim());
+    if (fx.uf) p.set('uf', fx.uf);
+    p.set('ordenar', fx.ordenar);
+    p.set('pagina', String(pagina));
+    return p.toString();
+  };
+  const carregar = async (reiniciar) => {
     const meu = ++pedido;
     if (reiniciar) {
       pagina = 1;
@@ -2272,12 +2447,14 @@ async function telaEmpAchados(id) {
     }
     mais.disabled = true;
     try {
-      const r = await api(`empregos/buscas/${encodeURIComponent(id)}/achados?filtro=${filtro}&pagina=${pagina}`);
+      const r = await api(`empregos/buscas/${encodeURIComponent(id)}/achados?${parametros()}`);
       if (meu !== pedido) return;
       if (reiniciar) caixa.replaceChildren();
-      for (const a of listaDe(Array.isArray(r) ? r : r?.itens)) caixa.append(cartaoAchado(a, { aoSumir: vazio }));
+      for (const a of listaDe(Array.isArray(r) ? r : r?.itens)) caixa.append(cartaoAchado(a, { aoSumir: () => { if (total != null) total = Math.max(0, total - 1); vazio(); } }));
       pagina = numeroOu(r?.pagina, pagina) + 1;
       mais.hidden = !r?.tem_mais;
+      total = r?.total != null ? numeroOu(r.total) : null;
+      if (r?.facetas) { facetas = r.facetas; desenharFacetas(); }
       vazio();
     } catch (e) {
       if (meu !== pedido) return;
@@ -2285,24 +2462,55 @@ async function telaEmpAchados(id) {
       caixa.append(el('p', { class: 'nota erro' }, e.message));
     } finally { mais.disabled = false; }
   };
+  // Mudou um filtro: grava no endereço (sem recarregar a tela) e pede de novo ao servidor.
+  const aplicar = () => {
+    const q = queryFiltros(fx);
+    history.replaceState(null, '', `#/empregos/${encodeURIComponent(id)}${q ? `?${q}` : ''}`);
+    marcarSituacao();
+    carregar(true);
+  };
 
-  try {
-    busca = lerBuscas(await api('empregos/buscas')).buscas.find((b) => String(b.id) === id) || null;
-  } catch { busca = null; }
+  try { busca = await buscaPorId(id); } catch { busca = null; }
   desenharCabeca();
-  // Sem novos e com histórico: abre direto em Todos.
-  if (busca && numeroOu(busca.contadores?.novos) === 0 && numeroOu(busca.contadores?.total) > 0) filtro = 'todos';
-  const pilulas = $('[data-filtro]', t);
-  for (const b of pilulas.children) b.classList.toggle('ativo', b.dataset.f === filtro);
-  pilulas.addEventListener('click', (ev) => {
+  // Sem situação no endereço: Novos quando há novos, senão Todos.
+  if (!fx.filtro) fx.filtro = busca && numeroOu(busca.contadores?.novos) === 0 && numeroOu(busca.contadores?.total) > 0 ? 'todos' : 'novos';
+  marcarSituacao();
+  preencherCampos();
+  desenharFacetas();
+  // Telas largas abrem a barra; no telefone ela começa recolhida, a menos que já haja filtro.
+  barra.open = matchMedia('(min-width: 861px)').matches || nFiltrosAtivos(fx) > 0;
+
+  $('[data-filtro]', t).addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-f]');
-    if (!b || b.dataset.f === filtro) return;
-    filtro = b.dataset.f;
-    for (const x of pilulas.children) x.classList.toggle('ativo', x === b);
-    carregarAchados(true);
+    if (!b || b.dataset.f === fx.filtro) return;
+    fx.filtro = b.dataset.f;
+    aplicar();
   });
-  mais.addEventListener('click', () => carregarAchados(false));
-  await carregarAchados(true);
+  barra.addEventListener('change', (ev) => {
+    const x = ev.target;
+    if (FILTROS_LISTA.includes(x.name)) fx[x.name] = marcadosEm($(`[data-faceta="${x.name}"]`, barra));
+    else if (x.name === 'dias') fx.dias = x.value;
+    else if (x.name === 'uf') fx.uf = x.value;
+    else if (x.name === 'ordenar') fx.ordenar = x.value;
+    else if (x.name === 'sem_salario') fx.sem_salario = x.checked;
+    else if (x.name === 'salario_min') { const v = valorMoeda(x.value); x.value = v ? brl(v) : ''; if (v === fx.salario_min) return; fx.salario_min = v; }
+    else return;
+    aplicar();
+  });
+  fs.salario.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); fs.salario.blur(); } });
+  let espera = null;
+  fs.q.addEventListener('input', () => {
+    clearTimeout(espera);
+    espera = setTimeout(() => { if (fs.q.value.trim() !== fx.q.trim()) { fx.q = fs.q.value; aplicar(); } }, 450);
+  });
+  $('[data-limpar]', t).addEventListener('click', () => {
+    Object.assign(fx, lerFiltros(''), { filtro: fx.filtro });
+    preencherCampos();
+    desenharFacetas();
+    aplicar();
+  });
+  mais.addEventListener('click', () => carregar(false));
+  await carregar(true);
 }
 
 // --- Administração › Empregos -------------------------------------------------------------------
@@ -2412,7 +2620,7 @@ const donoEmp = (x) => {
 
 function desenharBuscasEmp(caixa, buscas) {
   caixa.replaceChildren(tabelaAdmin(
-    [{ nome: 'Dono' }, { nome: 'Profissão' }, { nome: 'Cidades' }, { nome: 'Situação' }, { nome: 'Última coleta' }, { nome: 'Novos / total', num: true }, { nome: 'Ação' }],
+    [{ nome: 'Dono' }, { nome: 'Profissão' }, { nome: 'Cidades' }, { nome: 'Situação' }, { nome: 'Alerta' }, { nome: 'Última coleta' }, { nome: 'Novos / total', num: true }, { nome: 'Ação' }],
     buscas.map((b) => {
       const uc = b.ultima_coleta;
       const erro = uc && (uc.ok === false || uc.erro) ? (uc.erro || 'falhou') : null;
@@ -2425,6 +2633,7 @@ function desenharBuscasEmp(caixa, buscas) {
         b.profissao || '—',
         textoCidades(b),
         el('span', { class: `chip${b.ativa === false ? '' : ' chip-admin'}` }, b.ativa === false ? 'pausada' : 'ligada'),
+        el('span', { class: `chip${alertaLigado(b) ? ' chip-admin' : ''}` }, alertaLigado(b) ? 'ligado' : 'desligado'),
         el('span', { class: 'emp-adm-coleta' }, instante(uc) ? relativo(uc) : 'ainda não', erro ? el('small', { class: 'emp-erro' }, erro) : null),
         `${numeroOu(c.novos)} / ${numeroOu(c.total)}`,
         el('span', { class: 'emp-adm-acao' }, coletar, msg),
@@ -2556,8 +2765,10 @@ async function rota() {
   if (h === '#/empregos/nova') return telaEmpForm();
   const empEd = h.match(/^#\/empregos\/([\w-]{1,64})\/editar$/);
   if (empEd) return telaEmpForm(empEd[1]);
-  const empAch = h.match(/^#\/empregos\/([\w-]{1,64})$/);
-  if (empAch) return telaEmpAchados(empAch[1]);
+  const empAlerta = h.match(/^#\/empregos\/([\w-]{1,64})\/alerta$/);
+  if (empAlerta) return telaEmpAlerta(empAlerta[1]);
+  const empAch = h.match(/^#\/empregos\/([\w-]{1,64})(?:\?(.*))?$/);
+  if (empAch) return telaEmpAchados(empAch[1], empAch[2]);
   return telaAlertas();
 }
 

@@ -7,7 +7,7 @@
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
   <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=2b87a61fc7">
+  <link rel="stylesheet" href="style.css?v=5133f11ae2">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -426,13 +426,13 @@
     </section>
   </template>
 
-  <!-- Empregos: formulário de busca (nova e edição) -->
+  <!-- Empregos: formulário de busca (nova e edição): só o escopo da coleta -->
   <template id="t-emp-form">
     <section class="conteudo emp-estreito">
       <div class="novo-cabeca">
         <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
         <h1 data-titulo>Nova busca</h1>
-        <p class="sub">Vagas e concursos são procurados sozinhos ao longo do dia; as novas chegam no WhatsApp.</p>
+        <p class="sub">A busca define o que coletar: profissão e cidades. Os filtros de modelo, contrato e salário ficam na página de resultados; os critérios do aviso no WhatsApp, em Alertas.</p>
       </div>
       <form class="emp-form" data-form="busca" novalidate>
         <section class="fa-bloco" aria-labelledby="emp-b1">
@@ -443,11 +443,6 @@
             <div data-chips="termos"></div>
             <p class="fa-dica" data-termos-dica>A vaga entra quando o título contém algum destes termos (sem diferença de acento ou maiúscula). Ao sair do campo de profissão, os termos são sugeridos; dá para tirar e acrescentar.</p>
           </div>
-          <div class="emp-campo">
-            <span class="rotulo" id="emp-excluir-rotulo">Palavras que descartam a vaga <span class="opcional">(opcional)</span></span>
-            <div data-chips="excluir"></div>
-            <p class="fa-dica">Título com qualquer uma destas palavras fica de fora. Ex.: estágio, coordenador.</p>
-          </div>
         </section>
 
         <section class="fa-bloco" aria-labelledby="emp-b2">
@@ -456,40 +451,13 @@
           <div class="linha-botao"><button type="button" class="btn pequeno" data-mais-cidade><svg class="ic"><use href="#i-mais"/></svg>Adicionar cidade</button><span class="nota" data-cidades-nota>Até 3 cidades.</span></div>
           <p class="erro" data-erro-cidades role="alert"></p>
           <label class="interruptor"><input type="checkbox" name="aceita_remoto" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas remotas de qualquer lugar</span></label>
-          <fieldset class="emp-grupo">
-            <legend class="rotulo">Modelo de trabalho</legend>
-            <div class="pilulas pilulas-soltas" role="radiogroup" aria-label="Modelo de trabalho">
-              <label><input type="radio" name="modelo" value="qualquer" checked><span>Qualquer</span></label>
-              <label><input type="radio" name="modelo" value="presencial"><span>Presencial</span></label>
-              <label><input type="radio" name="modelo" value="hibrido"><span>Híbrido</span></label>
-              <label><input type="radio" name="modelo" value="remoto"><span>Remoto</span></label>
-            </div>
-          </fieldset>
         </section>
 
         <section class="fa-bloco" aria-labelledby="emp-b3">
-          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">3</span><h2 id="emp-b3">Contrato e salário</h2></header>
-          <fieldset class="emp-grupo">
-            <legend class="rotulo">Contrato</legend>
-            <div class="pilulas pilulas-soltas" role="radiogroup" aria-label="Contrato">
-              <label><input type="radio" name="contrato" value="qualquer" checked><span>Qualquer</span></label>
-              <label><input type="radio" name="contrato" value="clt"><span>CLT</span></label>
-              <label><input type="radio" name="contrato" value="pj"><span>PJ</span></label>
-              <label><input type="radio" name="contrato" value="estagio"><span>Estágio</span></label>
-              <label><input type="radio" name="contrato" value="temporario"><span>Temporário</span></label>
-            </div>
-          </fieldset>
-          <label class="campo emp-salario"><span class="rotulo">Salário mínimo por mês <span class="opcional">(opcional)</span></span><input name="salario_minimo" inputmode="numeric" autocomplete="off" placeholder="Sem mínimo"></label>
-          <label class="interruptor"><input type="checkbox" name="incluir_sem_salario" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas sem salário informado</span></label>
-          <p class="fa-dica">Vaga com salário informado abaixo do mínimo fica de fora. Valores de vagas anunciados por ano são convertidos para o mês.</p>
-        </section>
-
-        <section class="fa-bloco" aria-labelledby="emp-b4">
-          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">4</span><h2 id="emp-b4">Avisos</h2></header>
-          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Avisar também de concursos com o cargo</span></label>
-          <label class="interruptor"><input type="checkbox" name="alertar" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Avisar no WhatsApp</span></label>
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">3</span><h2 id="emp-b3">Coleta</h2></header>
+          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir concursos com o cargo nas UFs das cidades</span></label>
           <label class="interruptor"><input type="checkbox" name="ativa" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Busca ligada</span></label>
-          <p class="fa-dica">No WhatsApp: até 5 vagas por mensagem, no máximo 6 mensagens por dia, entre 08:00 e 21:00. O resto fica no painel.</p>
+          <p class="fa-dica">Busca ligada é coletada a cada 3 h, entre 07:00 e 22:00. Todas as vagas com algum termo no título, nas cidades escolhidas, aparecem nos resultados.</p>
         </section>
 
         <div class="emp-form-acoes">
@@ -500,72 +468,118 @@
       </form>
       <div class="painel perigo" data-apagar-lugar hidden>
         <div class="perigo-linha">
-          <div><h2>Apagar busca</h2><p class="nota">Apaga a busca e a lista de vagas encontradas para ela.</p></div>
+          <div><h2>Apagar busca</h2><p class="nota">Apaga a busca, o alerta e a lista de vagas encontradas para ela.</p></div>
           <button type="button" class="btn perigo" data-apagar><svg class="ic"><use href="#i-lixo"/></svg>Apagar busca</button>
         </div>
       </div>
     </section>
   </template>
 
-  <!-- Empregos: achados de uma busca -->
+  <!-- Empregos: alerta no WhatsApp de uma busca -->
+  <template id="t-emp-alerta">
+    <section class="conteudo emp-estreito">
+      <div class="novo-cabeca">
+        <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Resultados da busca</a></p>
+        <h1 data-titulo>Alerta no WhatsApp</h1>
+        <p class="sub" data-sub>Só as vagas novas que atendem a estes critérios chegam no WhatsApp. Os resultados da busca continuam completos na página.</p>
+      </div>
+      <form class="emp-form" data-form="alerta-emp" novalidate>
+        <section class="fa-bloco emp-alerta-liga">
+          <label class="interruptor"><input type="checkbox" name="ligado" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span><strong>Alerta ligado</strong></span></label>
+          <p class="fa-dica" data-estado-alerta></p>
+        </section>
+
+        <section class="fa-bloco" aria-labelledby="emp-a1">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">1</span><h2 id="emp-a1">Quais vagas</h2></header>
+          <fieldset class="emp-grupo">
+            <legend class="rotulo">Modelo de trabalho <span class="opcional">(nenhum marcado = qualquer)</span></legend>
+            <div class="pilulas pilulas-soltas" data-multi="modelo"></div>
+          </fieldset>
+          <fieldset class="emp-grupo">
+            <legend class="rotulo">Contrato <span class="opcional">(nenhum marcado = qualquer)</span></legend>
+            <div class="pilulas pilulas-soltas" data-multi="contrato"></div>
+          </fieldset>
+          <label class="campo emp-salario"><span class="rotulo">Salário mínimo por mês <span class="opcional">(opcional)</span></span><input name="salario_minimo" inputmode="numeric" autocomplete="off" placeholder="Sem mínimo"></label>
+          <label class="interruptor"><input type="checkbox" name="incluir_sem_salario" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas sem salário informado</span></label>
+          <div class="emp-campo">
+            <span class="rotulo" id="emp-excluir-rotulo">Palavras que descartam a vaga <span class="opcional">(opcional)</span></span>
+            <div data-chips="excluir"></div>
+            <p class="fa-dica">Título com qualquer uma destas palavras não gera aviso. Ex.: estágio, coordenador.</p>
+          </div>
+          <fieldset class="emp-grupo" data-fontes-grupo>
+            <legend class="rotulo">Fontes <span class="opcional">(nenhuma marcada = todas)</span></legend>
+            <div class="pilulas pilulas-soltas" data-multi="fontes"></div>
+          </fieldset>
+          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Avisar também de concursos</span></label>
+        </section>
+
+        <section class="fa-bloco" aria-labelledby="emp-a2">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">2</span><h2 id="emp-a2">Quando</h2></header>
+          <div class="emp-horario">
+            <label><span class="rotulo">A partir de</span><select name="horario_ini" data-hora></select></label>
+            <label><span class="rotulo">Até</span><select name="horario_fim" data-hora></select></label>
+          </div>
+          <p class="fa-dica">Fora do horário os avisos se acumulam e saem na abertura seguinte. Até 5 vagas por mensagem e no máximo 6 mensagens por dia; o resto fica nos resultados.</p>
+        </section>
+
+        <div class="emp-form-acoes">
+          <button type="submit" class="btn primario grande" data-salvar>Salvar alerta</button>
+          <button type="button" class="btn" data-testar><svg class="ic"><use href="#i-zap"/></svg>Enviar teste agora</button>
+          <span class="msg" data-msg role="status"></span>
+        </div>
+        <p class="fa-dica" data-testar-dica>O teste manda agora uma mensagem com até 5 vagas que atendem aos critérios salvos.</p>
+      </form>
+    </section>
+  </template>
+
+  <!-- Empregos: resultados de uma busca, com filtros aplicados no servidor -->
   <template id="t-emp-achados">
     <section class="conteudo">
       <p class="voltar"><a href="#/empregos"><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
       <div class="emp-cabeca painel" data-cabeca></div>
       <div class="emp-filtros">
-        <div class="pilulas" role="group" aria-label="Filtro dos achados" data-filtro>
-          <button type="button" data-f="novos" class="ativo">Novos</button>
+        <div class="pilulas" role="group" aria-label="Situação das vagas" data-filtro>
+          <button type="button" data-f="novos">Novos</button>
           <button type="button" data-f="todos">Todos</button>
           <button type="button" data-f="favoritos">Favoritos</button>
         </div>
-        <span class="nota" data-contagem></span>
+        <div class="emp-total"><strong data-total></strong><button type="button" class="link" data-limpar hidden>Limpar filtros</button></div>
       </div>
+      <details class="painel emp-barra" data-barra>
+        <summary><span>Filtros</span><span class="aba-n" data-n-filtros></span></summary>
+        <div class="emp-barra-grade">
+          <label class="emp-barra-texto"><span class="rotulo">Texto</span><input type="search" name="q" placeholder="Título, empregador ou descrição" autocomplete="off" maxlength="80"></label>
+          <label><span class="rotulo">UF</span><select name="uf" data-uf></select></label>
+          <label><span class="rotulo">Ordenar por</span><select name="ordenar">
+            <option value="recentes">Mais recentes</option>
+            <option value="salario">Maior salário</option>
+            <option value="empregador">Empregador (A–Z)</option>
+          </select></label>
+          <fieldset class="emp-grupo emp-barra-largo"><legend class="rotulo">Modelo</legend><div class="pilulas pilulas-soltas" data-faceta="modelo"></div></fieldset>
+          <fieldset class="emp-grupo emp-barra-largo"><legend class="rotulo">Contrato</legend><div class="pilulas pilulas-soltas" data-faceta="contrato"></div></fieldset>
+          <fieldset class="emp-grupo emp-barra-largo"><legend class="rotulo">Fonte</legend><div class="pilulas pilulas-soltas" data-faceta="fonte"></div></fieldset>
+          <fieldset class="emp-grupo emp-barra-largo"><legend class="rotulo">Publicadas</legend>
+            <div class="pilulas pilulas-soltas" data-dias>
+              <label><input type="radio" name="dias" value=""><span>Qualquer data</span></label>
+              <label><input type="radio" name="dias" value="7"><span>7 dias</span></label>
+              <label><input type="radio" name="dias" value="15"><span>15 dias</span></label>
+              <label><input type="radio" name="dias" value="30"><span>30 dias</span></label>
+              <label><input type="radio" name="dias" value="45"><span>45 dias</span></label>
+            </div>
+          </fieldset>
+          <div class="emp-barra-salario emp-barra-largo">
+            <label class="campo emp-salario"><span class="rotulo">Salário mínimo por mês</span><input name="salario_min" inputmode="numeric" autocomplete="off" placeholder="Sem mínimo"></label>
+            <label class="interruptor"><input type="checkbox" name="sem_salario" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir sem salário informado <span class="emp-conta" data-conta-sem></span></span></label>
+          </div>
+        </div>
+      </details>
       <div class="emp-achados" data-achados></div>
       <div class="emp-mais"><button type="button" class="btn" data-mais hidden>Carregar mais</button></div>
     </section>
   </template>
 
-  <!-- Conta -->
-  <template id="t-conta">
-    <section class="conteudo estreito">
-      <div class="topo"><div><h1>Conta</h1><p class="sub" data-tel-topo></p></div></div>
-      <div class="painel">
-        <h2>Aparência</h2>
-        <div class="pilulas" role="radiogroup" aria-label="Tema" data-tema-opcoes>
-          <label><input type="radio" name="tema" value="auto"><span>Automático</span></label>
-          <label><input type="radio" name="tema" value="claro"><span><svg><use href="#i-sol"/></svg>Claro</span></label>
-          <label><input type="radio" name="tema" value="escuro"><span><svg><use href="#i-lua"/></svg>Escuro</span></label>
-        </div>
-        <p class="nota">Automático segue o tema do aparelho. A escolha fica guardada neste navegador.</p>
-      </div>
-      <form class="painel" data-form="nome">
-        <h2>Dados</h2>
-        <label class="campo"><span class="rotulo">Nome</span><input name="nome" maxlength="60" required></label>
-        <p class="nota">Celular: <strong data-tel></strong></p>
-        <div class="linha-botao"><button class="btn primario" type="submit">Salvar</button><span class="msg" data-msg></span></div>
-      </form>
-      <form class="painel" data-form="senha">
-        <h2>Trocar senha</h2>
-        <label class="campo"><span class="rotulo">Senha atual</span><span class="campo-senha"><input name="atual" type="password" autocomplete="current-password" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
-        <label class="campo"><span class="rotulo">Senha nova <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="nova" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
-        <div class="linha-botao"><button class="btn primario" type="submit">Trocar senha</button><span class="msg" data-msg></span></div>
-      </form>
-      <div class="painel">
-        <h2>Sessões</h2>
-        <p class="nota">Sai deste e de todos os outros aparelhos. O próximo acesso pede código no WhatsApp.</p>
-        <div class="linha-botao"><button class="btn" data-sair-todos>Sair de todos os aparelhos</button></div>
-      </div>
-      <form class="painel perigo" data-form="apagar">
-        <h2>Apagar conta</h2>
-        <p class="nota">Apaga a conta, os alertas e o histórico. Não tem volta.</p>
-        <label class="campo"><span class="rotulo">Senha</span><span class="campo-senha"><input name="senha" type="password" autocomplete="current-password" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
-        <div class="linha-botao"><button class="btn perigo" type="submit"><svg class="ic"><use href="#i-lixo"/></svg>Apagar conta</button><span class="msg" data-msg></span></div>
-      </form>
-    </section>
-  </template>
-
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=17d8cd94ed"></script>
+  <script src="app.js?v=2ca3320388"></script>
 </body>
 </html>
