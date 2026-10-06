@@ -7,7 +7,7 @@
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
   <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=5133f11ae2">
+  <link rel="stylesheet" href="style.css?v=b65ece2353">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -33,9 +33,16 @@
     <symbol id="i-maleta" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/></g></symbol>
     <symbol id="i-pessoa" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></g></symbol>
     <symbol id="i-estrela" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-estrela-cheia" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-fechar" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
     <symbol id="i-externo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-predio" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 10h4a1 1 0 0 1 1 1v10M2 21h20"/><path d="M8 8h3M8 12h3M8 16h3"/></g></symbol>
+    <symbol id="i-metade" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M12 3.5a8.5 8.5 0 0 1 0 17z"/></symbol>
+    <symbol id="i-casa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5"/></symbol>
+    <symbol id="i-pino" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+    <symbol id="i-arquivo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></g></symbol>
+    <symbol id="i-desfazer" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
     <symbol id="i-zap" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.5z"/></symbol>
   </svg>
 
@@ -432,11 +439,25 @@
       <div class="novo-cabeca">
         <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
         <h1 data-titulo>Nova busca</h1>
-        <p class="sub">A busca define o que coletar: profissão e cidades. Os filtros de modelo, contrato e salário ficam na página de resultados; os critérios do aviso no WhatsApp, em Alertas.</p>
+        <p class="sub">A busca define o que coletar: onde e qual profissão. Os filtros de modelo, contrato e salário ficam na página de resultados; os critérios do aviso no WhatsApp, em Alertas.</p>
       </div>
       <form class="emp-form" data-form="busca" novalidate>
+        <section class="fa-bloco" aria-labelledby="emp-b2">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">1</span><h2 id="emp-b2">Onde procurar</h2></header>
+          <div class="emp-opcoes" role="radiogroup" aria-labelledby="emp-b2">
+            <label class="emp-opcao"><input type="radio" name="abrangencia" value="brasil"><span class="emp-opcao-corpo"><strong>Brasil inteiro</strong><small>Qualquer cidade, presencial ou remoto. Ideal para quem procura remoto.</small></span></label>
+            <label class="emp-opcao"><input type="radio" name="abrangencia" value="cidades" checked><span class="emp-opcao-corpo"><strong>Cidades específicas</strong><small>Até 3 cidades, com a opção de incluir remotas.</small></span></label>
+          </div>
+          <div class="emp-onde-cidades" data-onde-cidades>
+            <div class="emp-cidades" data-cidades></div>
+            <div class="linha-botao"><button type="button" class="btn pequeno" data-mais-cidade><svg class="ic"><use href="#i-mais"/></svg>Adicionar cidade</button><span class="nota" data-cidades-nota>Até 3 cidades.</span></div>
+            <p class="erro" data-erro-cidades role="alert"></p>
+            <label class="interruptor"><input type="checkbox" name="aceita_remoto" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas remotas de qualquer lugar</span></label>
+          </div>
+        </section>
+
         <section class="fa-bloco" aria-labelledby="emp-b1">
-          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">1</span><h2 id="emp-b1">Profissão</h2></header>
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">2</span><h2 id="emp-b1">Profissão</h2></header>
           <label class="campo"><span class="rotulo">Profissão ou cargo</span><input name="profissao" maxlength="80" placeholder="Ex.: Fonoaudióloga" required autocomplete="off"></label>
           <div class="emp-campo">
             <span class="rotulo" id="emp-termos-rotulo">Termos no título da vaga</span>
@@ -445,17 +466,9 @@
           </div>
         </section>
 
-        <section class="fa-bloco" aria-labelledby="emp-b2">
-          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">2</span><h2 id="emp-b2">Onde</h2></header>
-          <div class="emp-cidades" data-cidades></div>
-          <div class="linha-botao"><button type="button" class="btn pequeno" data-mais-cidade><svg class="ic"><use href="#i-mais"/></svg>Adicionar cidade</button><span class="nota" data-cidades-nota>Até 3 cidades.</span></div>
-          <p class="erro" data-erro-cidades role="alert"></p>
-          <label class="interruptor"><input type="checkbox" name="aceita_remoto" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas remotas de qualquer lugar</span></label>
-        </section>
-
         <section class="fa-bloco" aria-labelledby="emp-b3">
           <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">3</span><h2 id="emp-b3">Coleta</h2></header>
-          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir concursos com o cargo nas UFs das cidades</span></label>
+          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir concursos com o cargo (nas UFs das cidades ou, com Brasil inteiro, de todo o país)</span></label>
           <label class="interruptor"><input type="checkbox" name="ativa" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Busca ligada</span></label>
           <p class="fa-dica">Busca ligada é coletada a cada 3 h, entre 07:00 e 22:00. Todas as vagas com algum termo no título, nas cidades escolhidas, aparecem nos resultados.</p>
         </section>
@@ -539,11 +552,13 @@
       <div class="emp-cabeca painel" data-cabeca></div>
       <div class="emp-filtros">
         <div class="pilulas" role="group" aria-label="Situação das vagas" data-filtro>
-          <button type="button" data-f="novos">Novos</button>
-          <button type="button" data-f="todos">Todos</button>
-          <button type="button" data-f="favoritos">Favoritos</button>
+          <button type="button" data-f="novos">Novos <span class="aba-n" data-n-status="novos"></span></button>
+          <button type="button" data-f="todos">Todos <span class="aba-n" data-n-status="todos"></span></button>
+          <button type="button" data-f="favoritos">Favoritos <span class="aba-n" data-n-status="favoritos"></span></button>
+          <button type="button" data-f="arquivados">Arquivados <span class="aba-n" data-n-status="arquivados"></span></button>
         </div>
         <div class="emp-total"><strong data-total></strong><button type="button" class="link" data-limpar hidden>Limpar filtros</button></div>
+        <p class="emp-aviso-acao" data-aviso role="status"></p>
       </div>
       <details class="painel emp-barra" data-barra>
         <summary><span>Filtros</span><span class="aba-n" data-n-filtros></span></summary>
@@ -580,6 +595,6 @@
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=1afc79bcc8"></script>
+  <script src="app.js?v=2e29bb399c"></script>
 </body>
 </html>

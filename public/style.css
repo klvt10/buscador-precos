@@ -17,6 +17,15 @@
   --emp-serie-2: #bf8700;
   --emp-serie-3: #8250df;
   --emp-serie-4: #1a7f37;
+  --emp-presencial-bg: #e7edf5; --emp-presencial-fg: #3b5878;
+  --emp-hibrido-bg: #fcefd2; --emp-hibrido-fg: #865500;
+  --emp-remoto-bg: #d9f3e1; --emp-remoto-fg: #17703a;
+  --emp-clt-bg: #e5e7fb; --emp-clt-fg: #3a45b0;
+  --emp-pj-bg: #f0e5fb; --emp-pj-fg: #7638b3;
+  --emp-estagio-bg: #d9f1f6; --emp-estagio-fg: #0b6b86;
+  --emp-temporario-bg: #f1ebe4; --emp-temporario-fg: #74604d;
+  --emp-concurso: #8250df;
+  --emp-favorito: #d4a106;
   --raio: 10px;
   --realce: #fff3b0;
   --sombra: 0 12px 32px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .08);
@@ -49,6 +58,15 @@
   --emp-serie-2: #d29922;
   --emp-serie-3: #a371f7;
   --emp-serie-4: #3fb950;
+  --emp-presencial-bg: #1d2836; --emp-presencial-fg: #a8c0db;
+  --emp-hibrido-bg: #3a2b0d; --emp-hibrido-fg: #e8b84a;
+  --emp-remoto-bg: #11311c; --emp-remoto-fg: #5fd57a;
+  --emp-clt-bg: #232748; --emp-clt-fg: #a9b0f7;
+  --emp-pj-bg: #332247; --emp-pj-fg: #cda6f6;
+  --emp-estagio-bg: #0e3038; --emp-estagio-fg: #6cd4e6;
+  --emp-temporario-bg: #342c25; --emp-temporario-fg: #cdbba8;
+  --emp-concurso: #a371f7;
+  --emp-favorito: #e3b341;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -80,6 +98,15 @@
   --emp-serie-2: #d29922;
   --emp-serie-3: #a371f7;
   --emp-serie-4: #3fb950;
+  --emp-presencial-bg: #1d2836; --emp-presencial-fg: #a8c0db;
+  --emp-hibrido-bg: #3a2b0d; --emp-hibrido-fg: #e8b84a;
+  --emp-remoto-bg: #11311c; --emp-remoto-fg: #5fd57a;
+  --emp-clt-bg: #232748; --emp-clt-fg: #a9b0f7;
+  --emp-pj-bg: #332247; --emp-pj-fg: #cda6f6;
+  --emp-estagio-bg: #0e3038; --emp-estagio-fg: #6cd4e6;
+  --emp-temporario-bg: #342c25; --emp-temporario-fg: #cdbba8;
+  --emp-concurso: #a371f7;
+  --emp-favorito: #e3b341;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -930,17 +957,14 @@ body:not(.admin) [data-so-admin] { display: none; }
 .emp-cabeca { gap: 12px; }
 .emp-cabeca h1 { font-size: 1.5rem; }
 .emp-filtros { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.emp-achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: start; }
+.emp-achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: stretch; }
 .emp-achados > .vazio, .emp-achados > .nota { grid-column: 1 / -1; }
 .emp-achados-vazio { padding: 32px 16px; background: var(--card); border: 1px dashed var(--borda); border-radius: 16px; }
 .emp-achado {
   position: relative; display: grid; gap: 8px; min-width: 0; padding: 16px; overflow: hidden;
   background: var(--card); border: 1px solid var(--borda); border-radius: 16px; box-shadow: var(--sombra-leve);
 }
-.emp-achado[data-status="novo"] { border-left: 4px solid var(--primaria); }
-.emp-achado[data-status="favorito"] { border-left: 4px solid var(--amarelo); }
-.emp-achado.concurso { border-left: 4px solid var(--emp-serie-3); }
-.emp-faixa { margin: -16px -16px 4px; padding: 4px 16px; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--emp-serie-3); }
+.emp-faixa { margin: -16px -16px 4px; padding: 4px 16px; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--emp-concurso); }
 .emp-achado-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-width: 0; }
 .emp-achado h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
 .emp-novo { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primaria-texto); background: var(--primaria); }
@@ -1019,4 +1043,64 @@ body:not(.admin) [data-so-admin] { display: none; }
 }
 @media (max-width: 420px) {
   .barra-acoes [data-tema-botao] { display: none; }
+}
+
+/* Empregos v3: onde procurar, cartões uniformes e badges ---------------------------------------- */
+.emp-opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.emp-opcao { position: relative; display: block; cursor: pointer; }
+.emp-opcao input { position: absolute; opacity: 0; pointer-events: none; }
+.emp-opcao-corpo { display: grid; gap: 2px; height: 100%; padding: 12px 14px 12px 40px; border: 1px solid var(--borda); border-radius: 12px; background: var(--fundo); color: var(--texto); transition: border-color .15s, background .15s; }
+.emp-opcao-corpo::before { content: ""; position: absolute; left: 14px; top: 15px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--suave); background: var(--card); box-sizing: border-box; }
+.emp-opcao-corpo strong { font-size: .95rem; }
+.emp-opcao-corpo small { font-size: .8rem; color: var(--suave); }
+.emp-opcao:hover .emp-opcao-corpo { border-color: var(--suave); }
+.emp-opcao input:checked + .emp-opcao-corpo { border-color: var(--primaria); background: var(--primaria-suave); box-shadow: inset 0 0 0 1px var(--primaria); }
+.emp-opcao input:checked + .emp-opcao-corpo::before { border-color: var(--primaria); background: radial-gradient(circle, var(--primaria) 0 4px, var(--card) 4.5px); }
+.emp-opcao input:focus-visible + .emp-opcao-corpo { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.emp-onde-cidades { display: grid; gap: 12px; min-width: 0; }
+
+/* Cartão de vaga: mesmo esqueleto, rodapé alinhado */
+.emp-achado { display: flex; flex-direction: column; gap: 6px; }
+.emp-achado.saindo { opacity: 0; transform: scale(.98); transition: opacity .18s, transform .18s; }
+.emp-achado h3 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.emp-achado[data-status="visto"] h3, .emp-achado[data-status="arquivado"] h3 { font-weight: 500; }
+.emp-achado[data-status="arquivado"] { opacity: .88; }
+.emp-empregador { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.emp-achado .emp-local { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.emp-achado .emp-local .ic { width: 14px; height: 14px; }
+.emp-achado .emp-local span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emp-achado .emp-achado-acoes { margin-top: auto; }
+.emp-achado .emp-meta { margin-bottom: 4px; }
+.emp-canto { flex: none; display: inline-grid; place-items: center; }
+.emp-canto.novo { padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primaria-texto); background: var(--primaria); }
+.emp-canto.favorito { width: 26px; height: 26px; color: var(--emp-favorito); }
+.emp-canto.favorito svg { width: 22px; height: 22px; }
+.emp-canto.favorito svg path { fill: currentColor; }
+.emp-achado-acoes .btn[hidden] { display: none !important; }
+
+/* Badges: cor própria por modelo, contrato, fonte e UF de concurso */
+.emp-badges { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
+.emp-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: .76rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+.emp-badge .ic { width: 13px; height: 13px; }
+.emp-b-aprox { margin-left: 2px; font-size: .68rem; font-weight: 500; opacity: .75; }
+.emp-b-presencial.emp-badge, .emp-b-presencial input:checked + span { color: var(--emp-presencial-fg); background: var(--emp-presencial-bg); border-color: color-mix(in srgb, var(--emp-presencial-fg) 35%, transparent); }
+.emp-b-hibrido.emp-badge, .emp-b-hibrido input:checked + span { color: var(--emp-hibrido-fg); background: var(--emp-hibrido-bg); border-color: color-mix(in srgb, var(--emp-hibrido-fg) 35%, transparent); }
+.emp-b-remoto.emp-badge, .emp-b-remoto input:checked + span { color: var(--emp-remoto-fg); background: var(--emp-remoto-bg); border-color: color-mix(in srgb, var(--emp-remoto-fg) 35%, transparent); }
+.emp-b-clt.emp-badge, .emp-b-clt input:checked + span { color: var(--emp-clt-fg); background: var(--emp-clt-bg); border-color: color-mix(in srgb, var(--emp-clt-fg) 35%, transparent); }
+.emp-b-pj.emp-badge, .emp-b-pj input:checked + span { color: var(--emp-pj-fg); background: var(--emp-pj-bg); border-color: color-mix(in srgb, var(--emp-pj-fg) 35%, transparent); }
+.emp-b-estagio.emp-badge, .emp-b-estagio input:checked + span { color: var(--emp-estagio-fg); background: var(--emp-estagio-bg); border-color: color-mix(in srgb, var(--emp-estagio-fg) 35%, transparent); }
+.emp-b-temporario.emp-badge, .emp-b-temporario input:checked + span { color: var(--emp-temporario-fg); background: var(--emp-temporario-bg); border-color: color-mix(in srgb, var(--emp-temporario-fg) 35%, transparent); }
+.emp-b-fonte.emp-badge { font-weight: 500; color: var(--suave); background: transparent; border: 1px dashed var(--suave); }
+.emp-b-uf.emp-badge { color: var(--emp-concurso); background: color-mix(in srgb, var(--emp-concurso) 12%, transparent); border-color: color-mix(in srgb, var(--emp-concurso) 40%, transparent); }
+/* Pílula de filtro marcada com cor de badge: contador acompanha a cor */
+[class*="emp-b-"] input:checked + span .emp-conta { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
+.pilulas label[class*="emp-b-"] span .ic { width: 14px; height: 14px; }
+
+/* Abas com contagem e aviso de ação */
+[data-filtro] .aba-n { margin-left: 2px; }
+.emp-filtros [data-aviso] { flex-basis: 100%; margin: 0; font-size: .88rem; }
+.emp-filtros [data-aviso]:empty { display: none; }
+@media (max-width: 600px) {
+  .emp-filtros [data-filtro] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; border-radius: 16px; }
+  .emp-filtros [data-filtro] button { justify-content: center; display: inline-flex; align-items: center; gap: 4px; }
 }
