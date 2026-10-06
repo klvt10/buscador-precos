@@ -2450,9 +2450,9 @@ async function telaEmpAchados(id, query) {
       const r = await api(`empregos/buscas/${encodeURIComponent(id)}/achados?${parametros()}`);
       if (meu !== pedido) return;
       if (reiniciar) caixa.replaceChildren();
-      for (const a of listaDe(Array.isArray(r) ? r : r?.itens)) caixa.append(cartaoAchado(a, { aoSumir: () => { if (total != null) total = Math.max(0, total - 1); vazio(); } }));
+      for (const a of listaDe(Array.isArray(r) ? r : (r?.itens ?? r?.achados))) caixa.append(cartaoAchado(a, { aoSumir: () => { if (total != null) total = Math.max(0, total - 1); vazio(); } }));
       pagina = numeroOu(r?.pagina, pagina) + 1;
-      mais.hidden = !r?.tem_mais;
+      mais.hidden = !(r?.tem_mais ?? (numeroOu(r?.pagina, 1) < numeroOu(r?.paginas, 1)));
       total = r?.total != null ? numeroOu(r.total) : null;
       if (r?.facetas) { facetas = r.facetas; desenharFacetas(); }
       vazio();
