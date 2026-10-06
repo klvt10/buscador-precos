@@ -2708,7 +2708,7 @@ function desenharFontesEmp(caixa, lista, recarregar) {
         el('label', { class: 'interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }))),
       el('p', { class: 'adm-fonte-estado' }, el('span', { class: 'fonte-ponto', 'aria-hidden': 'true' }), texto),
       el('dl', { class: 'adm-fonte-dados' },
-        linha('Requisições hoje', String(numeroOu(f.requisicoes_hoje))),
+        linha('Requisições hoje', String(numeroOu(f.requisicoes_hoje ?? f.hoje?.requisicoes))),
         linha('Último sucesso', ok ? dataHora(ok) : '—', ok && !erroMaisNovo ? 'data-verde' : null),
         linha('Última falha', erro?.em ? dataHora(erro.em) : erro ? 'sem data' : '—', erroMaisNovo ? 'data-vermelha' : null)),
       erro ? el('p', { class: 'adm-fonte-erro' }, erro.texto) : null,
