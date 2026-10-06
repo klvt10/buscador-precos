@@ -79,7 +79,7 @@ function el(tag, attrs = {}, ...filhos) {
 }
 
 async function api(caminho, { method = 'GET', body } = {}) {
-  const r = await fetch(`api/${caminho}`, {
+  const r = await fetch(`/api/${caminho}`, {
     method,
     // Toda requisição que altera algo vai como JSON, mesmo sem corpo (DELETE, POST sem dados):
     // o servidor recusa com 403 qualquer POST/PUT/DELETE que não seja JSON do próprio site.
@@ -90,7 +90,7 @@ async function api(caminho, { method = 'GET', body } = {}) {
   const corpo = await r.json().catch(() => ({}));
   if (r.status === 401 && usuario && !caminho.startsWith('login') && !caminho.startsWith('eu/senha')) {
     usuario = null;
-    ir('#/entrar');
+    ir('/entrar');
     throw new Error(corpo.erro || 'Sessão expirada.');
   }
   if (!r.ok) {
@@ -113,15 +113,15 @@ function montar(id) {
   tela.replaceChildren($(`#${id}`).content.cloneNode(true));
   document.body.classList.toggle('logado', !!usuario);
   document.body.classList.toggle('admin', !!usuario?.admin);
-  const h = location.hash;
-  const secao = h.startsWith('#/conta') ? 'conta' : h.startsWith('#/admin') ? 'admin' : h.startsWith('#/empregos') ? 'empregos' : 'passagens';
+  const h = location.pathname;
+  const secao = /^\/conta(\/|$)/.test(h) ? 'conta' : /^\/admin(\/|$)/.test(h) ? 'admin' : /^\/empregos(\/|$)/.test(h) ? 'empregos' : 'passagens';
   for (const a of $$('[data-nav]')) {
     if (a.dataset.nav === secao) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
   // Marca e título seguem a aba principal: Empregos ou Passagens.
   const empregos = secao === 'empregos';
-  $('.marca').href = empregos ? '#/empregos' : '#/alertas';
+  $('.marca').href = empregos ? '/empregos' : '/passagens';
   $('.marca-nome').textContent = empregos ? 'Buscador de Empregos' : 'Buscador de Passagens';
   $('[data-marca-icone]').setAttribute('href', empregos ? '#i-maleta' : '#i-aviao');
   $('.marca-logo').classList.toggle('emp-marca', empregos);
@@ -137,10 +137,24 @@ function montarAcesso(id) {
   return tela;
 }
 
-function ir(hash) {
-  if (location.hash === hash) rota();
-  else location.hash = hash;
+// Navegação por caminho (History API): o servidor devolve index.html para qualquer caminho do app.
+function ir(caminho) {
+  if (`${location.pathname}${location.search}` !== caminho) history.pushState(null, '', caminho);
+  rota();
 }
+
+// Link interno (href="/…") navega sem recarregar a página; nova aba, download e /api seguem o navegador.
+document.addEventListener('click', (ev) => {
+  const a = ev.target.closest('a[href]');
+  if (!a || ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+  if (a.target && a.target !== '_self') return;
+  if (a.hasAttribute('download')) return;
+  const url = new URL(a.href, location.href);
+  if (url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
+  if (url.hash && url.pathname === location.pathname && url.search === location.search) return;
+  ev.preventDefault();
+  ir(`${url.pathname}${url.search}`);
+});
 
 function erroEm(form, e) {
   const p = $('[data-erro]', form) || $('[data-msg]', form);
@@ -168,7 +182,7 @@ function telaEntrar() {
       const r = await api('login', { method: 'POST', body: { telefone: f.telefone.value, senha: f.senha.value, lembrar: f.lembrar.checked } });
       if (r.precisa_codigo) {
         desafio = { tipo: 'login', id: r.desafio, tel: r.telefone };
-        ir('#/codigo');
+        ir('/codigo');
       } else {
         usuario = r.usuario;
         irDepoisDoLogin();
@@ -185,7 +199,7 @@ function telaCadastro() {
     enviar(f, async () => {
       const r = await api('cadastro', { method: 'POST', body: { nome: f.nome.value, telefone: f.telefone.value, senha: f.senha.value } });
       desafio = { tipo: 'cadastro', id: r.desafio, tel: r.telefone };
-      ir('#/codigo');
+      ir('/codigo');
     });
   });
 }
@@ -198,13 +212,13 @@ function telaEsqueci() {
     enviar(f, async () => {
       const r = await api('senha/esqueci', { method: 'POST', body: { telefone: f.telefone.value } });
       desafio = { tipo: 'senha', id: r.desafio, tel: r.telefone };
-      ir('#/codigo');
+      ir('/codigo');
     });
   });
 }
 
 function telaCodigo() {
-  if (!desafio) return ir('#/entrar');
+  if (!desafio) return ir('/entrar');
   const t = montarAcesso('t-codigo');
   const f = $('form', t);
   $('[data-tel]', t).textContent = desafio.tel;
@@ -247,7 +261,7 @@ $('#btn-sair').addEventListener('click', async () => {
   await api('sair', { method: 'POST', body: {} }).catch(() => {});
   usuario = null;
   depoisDoLogin = null;
-  ir('#/entrar');
+  ir('/entrar');
 });
 
 // --- Aeroportos ---------------------------------------------------------------------------------
@@ -560,7 +574,7 @@ function cartaoAlerta(x) {
   const sit = situacao(a);
   const cmp = comparacao(x.ultima, x.media, x.sem_voos);
   const ponta = (codigo, fim) => el('div', { class: `fa-ponta${fim ? ' fim' : ''}` }, el('strong', {}, codigo), el('span', {}, cidadeDe(codigo)));
-  return el('a', { class: `cartao-alerta ${sit.classe}`, href: `#/alertas/${a.id}` },
+  return el('a', { class: `cartao-alerta ${sit.classe}`, href: `/passagens/${a.id}` },
     el('div', { class: 'ca-bilhete' },
       el('div', { class: 'ca-cabeca' },
         el('span', { class: 'selo-bilhete' }, sit.texto),
@@ -602,11 +616,11 @@ async function telaAlertas() {
         el('span', { class: 'vazio-icone' }, icone('aviao', '')),
         el('h2', {}, 'Nenhum alerta ainda'),
         el('p', { class: 'nota' }, 'Escolha a rota e as datas: os preços passam a ser pesquisados sozinhos e o aviso chega no WhatsApp quando o total fica abaixo da média.'),
-        el('a', { class: 'btn primario grande', href: '#/novo' }, icone('mais'), 'Criar o primeiro alerta')));
+        el('a', { class: 'btn primario grande', href: '/passagens/nova' }, icone('mais'), 'Criar o primeiro alerta')));
       return;
     }
     for (const x of r.alertas) lista.append(cartaoAlerta(x));
-    lista.append(el('a', { class: 'cartao-novo', href: '#/novo' }, icone('mais', 'cartao-novo-icone'), el('strong', {}, 'Novo alerta'), el('span', {}, 'Outra rota ou outras datas')));
+    lista.append(el('a', { class: 'cartao-novo', href: '/passagens/nova' }, icone('mais', 'cartao-novo-icone'), el('strong', {}, 'Novo alerta'), el('span', {}, 'Outra rota ou outras datas')));
   };
   await carregar();
   atualizar = setInterval(() => carregar().catch(() => {}), 60e3);
@@ -975,7 +989,7 @@ function formAlerta(lugar, alerta, base = alerta) {
         : await api('alertas', { method: 'POST', body });
       msg.className = 'msg ok';
       msg.textContent = 'Salvo.';
-      ir(`#/alertas/${res.alerta.id}`);
+      ir(`/passagens/${res.alerta.id}`);
     });
   });
 }
@@ -983,7 +997,7 @@ function formAlerta(lugar, alerta, base = alerta) {
 async function telaNovo(baseId) {
   const t = montar('t-alertas');
   $('.topo', t).replaceChildren(el('div', { class: 'novo-cabeca' },
-    el('p', { class: 'sub' }, el('a', { href: '#/alertas' }, '← Meus alertas')),
+    el('p', { class: 'sub' }, el('a', { href: '/passagens' }, '← Meus alertas')),
     el('h1', {}, baseId ? 'Novo alerta a partir de outro' : 'Novo alerta'),
     el('p', { class: 'sub' }, 'Os preços são pesquisados sozinhos e o aviso chega no WhatsApp quando o total cai abaixo da média.')));
   let base = null;
@@ -1003,7 +1017,7 @@ function linkSeguro(u) {
 
 // comoAdmin: detalhe de alerta de qualquer usuário, só leitura (Administração › Alertas ligados).
 async function telaDetalhe(id, { comoAdmin = false } = {}) {
-  if (comoAdmin && !usuario.admin) return ir('#/alertas');
+  if (comoAdmin && !usuario.admin) return ir('/passagens');
   const t = montar('t-detalhe');
   const base = comoAdmin ? `admin/alertas/${id}` : `alertas/${id}`;
   let dias = 30;
@@ -1011,7 +1025,7 @@ async function telaDetalhe(id, { comoAdmin = false } = {}) {
   if (comoAdmin) {
     for (const x of [$('.det-acoes', t), $('.secao-titulo', t), $('[data-form-lugar]', t), $('.painel.perigo', t)]) x.remove();
     const voltar = $('.voltar a', t);
-    voltar.href = '#/admin/alertas';
+    voltar.href = '/admin/alertas';
     voltar.replaceChildren(icone('seta'), 'Alertas ligados');
   }
 
@@ -1126,7 +1140,7 @@ async function telaDetalhe(id, { comoAdmin = false } = {}) {
     await Promise.all([carregar(false), carregarAeroportos().catch(() => null)]);
     desenhar();
   } catch (e) {
-    $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', {}, e.message), el('a', { href: comoAdmin ? '#/admin/alertas' : '#/alertas' }, '← Voltar')));
+    $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', {}, e.message), el('a', { href: comoAdmin ? '/admin/alertas' : '/passagens' }, '← Voltar')));
     return;
   }
   await carregarGrafico();
@@ -1142,7 +1156,7 @@ async function telaDetalhe(id, { comoAdmin = false } = {}) {
   });
   if (comoAdmin) return;
   formAlerta($('[data-form-lugar]', t), dados.alerta);
-  $('[data-duplicar]', t).href = `#/novo/${id}`;
+  $('[data-duplicar]', t).href = `/passagens/nova/${id}`;
 
   $('[data-pesquisar]', t).addEventListener('click', async () => {
     await api(`alertas/${id}/pesquisar`, { method: 'POST', body: {} });
@@ -1158,7 +1172,7 @@ async function telaDetalhe(id, { comoAdmin = false } = {}) {
   $('[data-apagar]', t).addEventListener('click', async () => {
     if (!confirm('Apagar este alerta e todo o histórico dele?')) return;
     const r = await api(`alertas/${id}`, { method: 'DELETE' }).catch((e) => alert(e.message));
-    if (r) ir('#/alertas');
+    if (r) ir('/passagens');
   });
 }
 
@@ -1180,8 +1194,7 @@ function desenharSemVoos(t, dados, comoAdmin, id) {
       const body = { nome: a.nome, origem: a.origem, destino: a.destino, data_ida: a.data_ida, data_volta: a.data_volta, desconto_pct: Math.round(a.desconto_min * 1000) / 10, intervalo_min: a.intervalo_min, so_diretos: false, ativo: a.ativo };
       try {
         await api(`alertas/${id}`, { method: 'PUT', body });
-        ir(`#/alertas/${id}`);
-        rota();
+        ir(`/passagens/${id}`); // mesmo caminho: ir() redesenha a tela
       } catch (e) { b.disabled = false; alert(e.message); }
     });
     acoes.push(b);
@@ -1281,7 +1294,7 @@ async function telaConta() {
     if (!confirm('Sair de todos os aparelhos, inclusive este?')) return;
     await api('eu/sair-de-todos', { method: 'POST', body: {} });
     usuario = null;
-    ir('#/entrar');
+    ir('/entrar');
   });
   const fApagar = $('[data-form="apagar"]', t);
   fApagar.addEventListener('submit', (ev) => {
@@ -1290,7 +1303,7 @@ async function telaConta() {
     enviar(fApagar, async () => {
       await api('eu', { method: 'DELETE', body: { senha: fApagar.senha.value } });
       usuario = null;
-      ir('#/cadastro');
+      ir('/cadastro');
     });
   });
 }
@@ -1298,7 +1311,7 @@ async function telaConta() {
 // --- Administração ------------------------------------------------------------------------------
 // Só admin chega aqui; o backend também só responde admin/estado a admin (404 para os demais).
 async function telaAdmin(abaInicial = 'geral') {
-  if (!usuario.admin) return ir('#/alertas');
+  if (!usuario.admin) return ir('/passagens');
   const t = montar('t-admin');
   let aba = abaInicial;
   const n = (nome, v) => { $(`[data-n="${nome}"]`, t).textContent = v; };
@@ -1333,7 +1346,7 @@ async function telaAdmin(abaInicial = 'geral') {
   };
   const mostrarAba = (nova) => {
     aba = nova;
-    history.replaceState(null, '', nova === 'geral' ? '#/admin' : `#/admin/${nova === 'fontes' ? 'sites' : nova}`);
+    history.replaceState(null, '', nova === 'geral' ? '/admin' : `/admin/${nova === 'fontes' ? 'sites' : nova}`);
     for (const b of $$('[data-aba]', t)) b.setAttribute('aria-selected', String(b.dataset.aba === aba));
     for (const p of $$('[data-painel]', t)) p.hidden = p.dataset.painel !== aba;
     carregar[aba]().catch(falhou(aba));
@@ -1607,7 +1620,7 @@ function desenharAlertasAdmin(caixa, alertas) {
       ];
     }),
     'Nenhum alerta ligado.',
-    alertas.map((x) => `#/admin/alertas/${x.alerta.id}`)));
+    alertas.map((x) => `/admin/alertas/${x.alerta.id}`)));
 }
 
 function desenharUsuariosAdmin(caixa, usuarios) {
@@ -1821,7 +1834,7 @@ function termosBusca(b) {
 // Selo do alerta com atalho para a tela de alerta.
 function seloAlerta(b) {
   const ligado = alertaLigado(b);
-  return el('a', { class: `emp-selo-alerta${ligado ? ' ligado' : ''}`, href: `#/empregos/${encodeURIComponent(b.id)}/alerta`, title: 'Editar o alerta no WhatsApp' },
+  return el('a', { class: `emp-selo-alerta${ligado ? ' ligado' : ''}`, href: `/empregos/${encodeURIComponent(b.id)}/alerta`, title: 'Editar o alerta no WhatsApp' },
     icone('sino'), ligado ? 'Alerta ligado' : 'Alerta desligado', el('span', { class: 'emp-selo-editar' }, 'editar'));
 }
 
@@ -1866,9 +1879,9 @@ function cartaoBusca(b) {
       el('label', { class: 'interruptor emp-interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }), el('span', {}, 'Coleta ligada')),
       seloAlerta(b)),
     el('div', { class: 'emp-acoes' },
-      el('a', { class: 'btn primario', href: `#/empregos/${encodeURIComponent(b.id)}` }, 'Ver resultados'),
+      el('a', { class: 'btn primario', href: `/empregos/${encodeURIComponent(b.id)}` }, 'Ver resultados'),
       buscar,
-      el('a', { class: 'btn fantasma', href: `#/empregos/${encodeURIComponent(b.id)}/editar` }, 'Editar')),
+      el('a', { class: 'btn fantasma', href: `/empregos/${encodeURIComponent(b.id)}/editar` }, 'Editar')),
     msg);
   return card;
 }
@@ -1882,7 +1895,7 @@ async function telaEmpregos() {
     const lugar = $('[data-nova-lugar]', t);
     const aviso = $('[data-aviso-limite]', t);
     if (restantes > 0) {
-      lugar.replaceChildren(el('a', { class: 'btn primario', href: '#/empregos/nova' }, icone('mais'), 'Nova busca'));
+      lugar.replaceChildren(el('a', { class: 'btn primario', href: '/empregos/nova' }, icone('mais'), 'Nova busca'));
       aviso.hidden = true;
     } else {
       lugar.replaceChildren(el('button', { type: 'button', class: 'btn primario', disabled: '', 'aria-describedby': 'emp-aviso-limite' }, icone('mais'), 'Nova busca'));
@@ -1895,12 +1908,12 @@ async function telaEmpregos() {
         el('span', { class: 'vazio-icone emp-vazio-icone' }, icone('maleta', '')),
         el('h2', {}, 'Nenhuma busca de emprego ainda'),
         el('p', { class: 'nota' }, 'Uma busca guarda a profissão e as cidades. Sites de vagas e de concursos são consultados várias vezes ao dia; os resultados aparecem aqui com filtros de modelo, contrato e salário, e o alerta no WhatsApp é opcional.'),
-        el('a', { class: 'btn primario grande', href: '#/empregos/nova' }, icone('mais'), 'Criar a primeira busca')));
+        el('a', { class: 'btn primario grande', href: '/empregos/nova' }, icone('mais'), 'Criar a primeira busca')));
       return;
     }
     caixa.replaceChildren(...buscas.map(cartaoBusca));
     if (restantes > 0) {
-      caixa.append(el('a', { class: 'cartao-novo', href: '#/empregos/nova' }, icone('mais', 'cartao-novo-icone'), el('strong', {}, 'Nova busca'),
+      caixa.append(el('a', { class: 'cartao-novo', href: '/empregos/nova' }, icone('mais', 'cartao-novo-icone'), el('strong', {}, 'Nova busca'),
         el('span', {}, `Outra profissão ou outras cidades · ${restantes} ${restantes === 1 ? 'restante' : 'restantes'}`)));
     }
   };
@@ -1982,7 +1995,7 @@ function pilulasMulti(caixa, nome, opcoes, marcados) {
 }
 const marcadosEm = (caixa) => $$('input:checked', caixa).map((x) => x.value);
 
-function telaErroEmp(texto, voltar = '#/empregos') {
+function telaErroEmp(texto, voltar = '/empregos') {
   $('#tela').replaceChildren(el('section', { class: 'conteudo' }, el('p', { class: 'nota erro' }, texto), el('a', { href: voltar }, '← Minhas buscas')));
 }
 
@@ -1999,9 +2012,9 @@ async function telaEmpForm(id) {
     $('[data-titulo]', t).textContent = 'Editar busca';
     $('[data-salvar]', f).textContent = 'Salvar alterações';
     const voltar = $('[data-voltar]', t);
-    voltar.href = `#/empregos/${encodeURIComponent(id)}`;
+    voltar.href = `/empregos/${encodeURIComponent(id)}`;
     voltar.replaceChildren(icone('seta'), 'Resultados da busca');
-    $('[data-cancelar]', f).href = `#/empregos/${encodeURIComponent(id)}`;
+    $('[data-cancelar]', f).href = `/empregos/${encodeURIComponent(id)}`;
     $('[data-apagar-lugar]', t).hidden = false;
     document.title = `${busca.profissao || 'Busca'} · Buscador de Empregos`;
   }
@@ -2129,7 +2142,7 @@ async function telaEmpForm(id) {
       const salva = buscaDaResposta(r);
       avisar(msg, 'Salvo.', 'ok');
       const alvo = salva?.id ?? busca?.id;
-      ir(alvo != null ? `#/empregos/${encodeURIComponent(alvo)}` : '#/empregos');
+      ir(alvo != null ? `/empregos/${encodeURIComponent(alvo)}` : '/empregos');
     });
   });
 
@@ -2139,7 +2152,7 @@ async function telaEmpForm(id) {
     b.disabled = true;
     try {
       await api(`empregos/buscas/${encodeURIComponent(busca.id)}`, { method: 'DELETE' });
-      ir('#/empregos');
+      ir('/empregos');
     } catch (e) { b.disabled = false; alert(e.message); }
   });
 }
@@ -2154,7 +2167,7 @@ async function telaEmpAlerta(id) {
   const testar = $('[data-testar]', f);
   const dicaTestar = $('[data-testar-dica]', f);
   const voltar = $('[data-voltar]', t);
-  voltar.href = `#/empregos/${encodeURIComponent(id)}`;
+  voltar.href = `/empregos/${encodeURIComponent(id)}`;
   let busca = null;
   let alerta = null;
   let fontesConhecidas = [];
@@ -2167,7 +2180,7 @@ async function telaEmpAlerta(id) {
     busca = b;
     if (!busca) { telaErroEmp('Busca não encontrada.'); return; }
     alerta = a?.erro_tela ? busca.alerta || null : a?.alerta || a;
-    if (a?.erro_tela && !alerta) { telaErroEmp(a.erro_tela.message, `#/empregos/${encodeURIComponent(id)}`); return; }
+    if (a?.erro_tela && !alerta) { telaErroEmp(a.erro_tela.message, `/empregos/${encodeURIComponent(id)}`); return; }
     fontesConhecidas = listaDe(a?.fontes_disponiveis).length ? a.fontes_disponiveis : Object.keys(ach?.facetas?.por_fonte || {});
   } catch (e) { telaErroEmp(e.message); return; }
   alerta = alerta || {};
@@ -2361,7 +2374,7 @@ function cartaoAchado(a, { aba, aoMudar }) {
   return card;
 }
 
-// Filtros dos resultados: vivem na query do endereço (#/empregos/ID?modelo=presencial&dias=30).
+// Filtros dos resultados: vivem na query do endereço (/empregos/ID?modelo=presencial&dias=30).
 const FILTROS_LISTA = ['modelo', 'contrato', 'fonte'];
 function lerFiltros(query) {
   const p = new URLSearchParams(query || '');
@@ -2460,8 +2473,8 @@ async function telaEmpAchados(id, query) {
       ultimaColeta(busca),
       el('div', { class: 'emp-acoes' },
         buscar,
-        el('a', { class: 'btn', href: `#/empregos/${encodeURIComponent(busca.id)}/alerta` }, icone('sino'), alertaLigado(busca) ? 'Alerta ligado' : 'Alerta desligado'),
-        el('a', { class: 'btn fantasma', href: `#/empregos/${encodeURIComponent(busca.id)}/editar` }, 'Editar busca'),
+        el('a', { class: 'btn', href: `/empregos/${encodeURIComponent(busca.id)}/alerta` }, icone('sino'), alertaLigado(busca) ? 'Alerta ligado' : 'Alerta desligado'),
+        el('a', { class: 'btn fantasma', href: `/empregos/${encodeURIComponent(busca.id)}/editar` }, 'Editar busca'),
         msg));
   };
 
@@ -2554,7 +2567,7 @@ async function telaEmpAchados(id, query) {
   // Mudou um filtro: grava no endereço (sem recarregar a tela) e pede de novo ao servidor.
   const aplicar = () => {
     const q = queryFiltros(fx);
-    history.replaceState(null, '', `#/empregos/${encodeURIComponent(id)}${q ? `?${q}` : ''}`);
+    history.replaceState(null, '', `/empregos/${encodeURIComponent(id)}${q ? `?${q}` : ''}`);
     marcarSituacao();
     carregar(true);
   };
@@ -2816,53 +2829,83 @@ async function carregarEmpregosAdmin(painel) {
 }
 
 // --- Roteamento ---------------------------------------------------------------------------------
+// Caminhos: /entrar /cadastro /esqueci /codigo /conta · /passagens[/nova[/ID] | /ID[/editar]]
+// · /empregos[/nova | /ID[/editar | /alerta]] · /admin[/sites | /alertas[/ID] | /usuarios | /empregos].
 
 let primeira = true;
 // Endereço pedido antes do login (ex.: link do WhatsApp para um alerta): depois de entrar, vai para ele.
 let depoisDoLogin = null;
-const irDepoisDoLogin = () => { const h = depoisDoLogin || '#/alertas'; depoisDoLogin = null; ir(h); };
+const irDepoisDoLogin = () => { const h = depoisDoLogin || '/empregos'; depoisDoLogin = null; ir(h); };
+
+// Endereços antigos com # (#/alertas/ID, /passagens/#/empregos…) viram o caminho novo.
+function caminhoDoHash(hash) {
+  const x = hash.slice(1);
+  let m;
+  if (x === '/alertas' || x === '/') return '/passagens';
+  if ((m = x.match(/^\/alertas\/(.+)$/))) return `/passagens/${m[1]}`;
+  if (x === '/novo') return '/passagens/nova';
+  if ((m = x.match(/^\/novo\/(.+)$/))) return `/passagens/nova/${m[1]}`;
+  if (x === '/sair') return '/entrar';
+  return x;
+}
 
 async function rota() {
-  const h = location.hash || '#/alertas';
-  const publicas = ['#/entrar', '#/cadastro', '#/esqueci', '#/codigo'];
-  if (primeira && !usuario && publicas.includes(h) && h !== '#/codigo') {
+  if (location.hash.startsWith('#/')) history.replaceState(null, '', caminhoDoHash(location.hash));
+  const h = location.pathname.replace(/\/+$/, '') || '/';
+  const query = location.search.replace(/^\?/, '');
+  const publicas = ['/entrar', '/cadastro', '/esqueci', '/codigo'];
+  if (primeira && !usuario && publicas.includes(h) && h !== '/codigo') {
     usuario = (await api('sessao').catch(() => null))?.usuario || null; // sessão ainda válida pula o login
   }
   primeira = false;
   if (!usuario && !publicas.includes(h)) {
     usuario = (await api('sessao').catch(() => null))?.usuario || null;
     if (!usuario) {
-      if (h !== '#/alertas' && h !== '#/sair') depoisDoLogin = h;
-      return ir('#/entrar');
+      if (h !== '/') depoisDoLogin = `${h}${location.search}`;
+      history.replaceState(null, '', '/entrar');
+      return rota();
     }
   }
   if (usuario && publicas.includes(h)) return irDepoisDoLogin();
   if (usuario && !Object.keys(fontes).length) fontes = await api('fontes').catch(() => ({}));
-  if (h === '#/entrar') return telaEntrar();
-  if (h === '#/cadastro') return telaCadastro();
-  if (h === '#/esqueci') return telaEsqueci();
-  if (h === '#/codigo') return telaCodigo();
-  if (h === '#/novo') return telaNovo();
-  const novo = h.match(/^#\/novo\/([0-9a-f]{24})$/);
+  if (h === '/') { history.replaceState(null, '', '/empregos'); return rota(); }
+  if (h === '/entrar') return telaEntrar();
+  if (h === '/cadastro') return telaCadastro();
+  if (h === '/esqueci') return telaEsqueci();
+  if (h === '/codigo') return telaCodigo();
+  if (h === '/conta') return telaConta();
+  // Passagens
+  if (h === '/passagens') return telaAlertas();
+  if (h === '/passagens/nova') return telaNovo();
+  const novo = h.match(/^\/passagens\/nova\/([0-9a-f]{24})$/);
   if (novo) return telaNovo(novo[1]);
-  if (h === '#/conta') return telaConta();
-  const adm = h.match(/^#\/admin(?:\/(sites|alertas|usuarios|empregos))?$/);
-  if (adm) return telaAdmin(adm[1] === 'sites' ? 'fontes' : adm[1] || 'geral');
-  const admAlerta = h.match(/^#\/admin\/alertas\/([0-9a-f]{24})$/);
-  if (admAlerta) return telaDetalhe(admAlerta[1], { comoAdmin: true });
-  const m = h.match(/^#\/alertas\/([0-9a-f]{24})$/);
+  const editar = h.match(/^\/passagens\/([0-9a-f]{24})\/editar$/);
+  if (editar) {
+    await telaDetalhe(editar[1]);
+    $('[data-form-lugar]')?.scrollIntoView({ block: 'start' });
+    return;
+  }
+  const m = h.match(/^\/passagens\/([0-9a-f]{24})$/);
   if (m) return telaDetalhe(m[1]);
-  if (h === '#/empregos') return telaEmpregos();
-  if (h === '#/empregos/nova') return telaEmpForm();
-  const empEd = h.match(/^#\/empregos\/([\w-]{1,64})\/editar$/);
+  // Administração
+  const adm = h.match(/^\/admin(?:\/(sites|alertas|usuarios|empregos))?$/);
+  if (adm) return telaAdmin(adm[1] === 'sites' ? 'fontes' : adm[1] || 'geral');
+  const admAlerta = h.match(/^\/admin\/alertas\/([0-9a-f]{24})$/);
+  if (admAlerta) return telaDetalhe(admAlerta[1], { comoAdmin: true });
+  // Empregos
+  if (h === '/empregos') return telaEmpregos();
+  if (h === '/empregos/nova') return telaEmpForm();
+  const empEd = h.match(/^\/empregos\/([\w-]{1,64})\/editar$/);
   if (empEd) return telaEmpForm(empEd[1]);
-  const empAlerta = h.match(/^#\/empregos\/([\w-]{1,64})\/alerta$/);
+  const empAlerta = h.match(/^\/empregos\/([\w-]{1,64})\/alerta$/);
   if (empAlerta) return telaEmpAlerta(empAlerta[1]);
-  const empAch = h.match(/^#\/empregos\/([\w-]{1,64})(?:\?(.*))?$/);
-  if (empAch) return telaEmpAchados(empAch[1], empAch[2]);
-  return telaAlertas();
+  const empAch = h.match(/^\/empregos\/([\w-]{1,64})$/);
+  if (empAch) return telaEmpAchados(empAch[1], query);
+  // Caminho desconhecido: Empregos.
+  history.replaceState(null, '', '/empregos');
+  return rota();
 }
 
-window.addEventListener('hashchange', rota);
+window.addEventListener('popstate', rota);
 temaMudou();
 rota();

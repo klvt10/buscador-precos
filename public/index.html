@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
-  <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=b65ece2353">
+  <script src="/tema.js?v=728c87caaf"></script>
+  <link rel="stylesheet" href="/style.css?v=e9513c3674">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -48,15 +48,15 @@
 
   <header class="barra" id="barra">
     <div class="barra-dentro">
-      <a href="#/alertas" class="marca">
+      <a href="/passagens" class="marca">
         <span class="marca-logo"><svg><use href="#i-aviao" data-marca-icone/></svg></span>
         <span class="marca-nome">Buscador de Passagens</span>
       </a>
       <nav class="barra-nav" data-so-logado>
-        <a href="#/alertas" data-nav="passagens">Passagens</a>
-        <a href="#/empregos" data-nav="empregos">Empregos</a>
-        <a href="#/conta" data-nav="conta" aria-label="Conta"><svg class="ic nav-curto" aria-hidden="true"><use href="#i-pessoa"/></svg><span class="nav-longo">Conta</span></a>
-        <a href="#/admin" data-nav="admin" data-so-admin aria-label="Administração"><span class="nav-longo">Administração</span><span class="nav-curto" aria-hidden="true">Admin</span></a>
+        <a href="/passagens" data-nav="passagens">Passagens</a>
+        <a href="/empregos" data-nav="empregos">Empregos</a>
+        <a href="/conta" data-nav="conta" aria-label="Conta"><svg class="ic nav-curto" aria-hidden="true"><use href="#i-pessoa"/></svg><span class="nav-longo">Conta</span></a>
+        <a href="/admin" data-nav="admin" data-so-admin aria-label="Administração"><span class="nav-longo">Administração</span><span class="nav-curto" aria-hidden="true">Admin</span></a>
       </nav>
       <div class="barra-acoes">
         <button type="button" class="icone-btn" data-tema-botao aria-label="Mudar para o tema escuro" title="Mudar para o tema escuro">
@@ -104,7 +104,7 @@
       <label class="check"><input type="checkbox" name="lembrar" checked> Lembrar este aparelho por 30 dias</label>
       <button class="btn primario grande" type="submit">Entrar</button>
       <p class="erro" data-erro role="alert"></p>
-      <p class="links"><a href="#/esqueci">Esqueci a senha</a><span aria-hidden="true">·</span><a href="#/cadastro">Criar conta</a></p>
+      <p class="links"><a href="/esqueci">Esqueci a senha</a><span aria-hidden="true">·</span><a href="/cadastro">Criar conta</a></p>
     </form>
   </template>
 
@@ -119,7 +119,7 @@
       <label class="campo"><span class="rotulo">Senha <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="senha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
       <button class="btn primario grande" type="submit">Criar conta</button>
       <p class="erro" data-erro role="alert"></p>
-      <p class="links">Já tem conta? <a href="#/entrar">Entrar</a></p>
+      <p class="links">Já tem conta? <a href="/entrar">Entrar</a></p>
     </form>
   </template>
 
@@ -134,7 +134,7 @@
       <label class="campo" data-nova-senha hidden><span class="rotulo">Senha nova <span class="opcional">(mín. 8 caracteres)</span></span><span class="campo-senha"><input name="senha" type="password" autocomplete="new-password" minlength="8"><button type="button" class="ver-senha" aria-label="Mostrar senha"><svg><use href="#i-olho"/></svg></button></span></label>
       <button class="btn primario grande" type="submit">Confirmar</button>
       <p class="erro" data-erro role="alert"></p>
-      <p class="links"><button type="button" class="link" data-reenviar>Reenviar código</button><span aria-hidden="true">·</span><a href="#/entrar">Voltar</a></p>
+      <p class="links"><button type="button" class="link" data-reenviar>Reenviar código</button><span aria-hidden="true">·</span><a href="/entrar">Voltar</a></p>
     </form>
   </template>
 
@@ -147,7 +147,7 @@
       <label class="campo"><span class="rotulo">Celular (WhatsApp)</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999" required></label>
       <button class="btn primario grande" type="submit">Enviar código</button>
       <p class="erro" data-erro role="alert"></p>
-      <p class="links"><a href="#/entrar">Voltar para entrar</a></p>
+      <p class="links"><a href="/entrar">Voltar para entrar</a></p>
     </form>
   </template>
 
@@ -159,7 +159,7 @@
           <h1>Meus alertas</h1>
           <p class="sub" data-limite></p>
         </div>
-        <a class="btn primario" href="#/novo" data-novo><svg class="ic"><use href="#i-mais"/></svg>Novo alerta</a>
+        <a class="btn primario" href="/passagens/nova" data-novo><svg class="ic"><use href="#i-mais"/></svg>Novo alerta</a>
       </div>
       <div class="lista" data-lista></div>
     </section>
@@ -273,7 +273,7 @@
         <div class="fa-acao">
           <p class="fa-acao-curta" data-r="curto" aria-hidden="true"></p>
           <button type="submit" class="btn primario grande" data-salvar>Criar alerta</button>
-          <a class="btn fantasma" data-cancelar href="#/alertas">Cancelar</a>
+          <a class="btn fantasma" data-cancelar href="/passagens">Cancelar</a>
           <span class="msg" data-msg role="status"></span>
         </div>
       </aside>
@@ -296,7 +296,7 @@
   <!-- Detalhe de um alerta -->
   <template id="t-detalhe">
     <section class="conteudo">
-      <p class="voltar"><a href="#/alertas"><svg class="ic"><use href="#i-seta"/></svg>Meus alertas</a></p>
+      <p class="voltar"><a href="/passagens"><svg class="ic"><use href="#i-seta"/></svg>Meus alertas</a></p>
 
       <div class="det-bilhete" data-bilhete>
         <div class="det-bilhete-rota">
@@ -437,7 +437,7 @@
   <template id="t-emp-form">
     <section class="conteudo emp-estreito">
       <div class="novo-cabeca">
-        <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
+        <p class="voltar"><a href="/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
         <h1 data-titulo>Nova busca</h1>
         <p class="sub">A busca define o que coletar: onde e qual profissão. Os filtros de modelo, contrato e salário ficam na página de resultados; os critérios do aviso no WhatsApp, em Alertas.</p>
       </div>
@@ -475,7 +475,7 @@
 
         <div class="emp-form-acoes">
           <button type="submit" class="btn primario grande" data-salvar>Criar busca</button>
-          <a class="btn fantasma" href="#/empregos" data-cancelar>Cancelar</a>
+          <a class="btn fantasma" href="/empregos" data-cancelar>Cancelar</a>
           <span class="msg" data-msg role="status"></span>
         </div>
       </form>
@@ -492,7 +492,7 @@
   <template id="t-emp-alerta">
     <section class="conteudo emp-estreito">
       <div class="novo-cabeca">
-        <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Resultados da busca</a></p>
+        <p class="voltar"><a href="/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Resultados da busca</a></p>
         <h1 data-titulo>Alerta no WhatsApp</h1>
         <p class="sub" data-sub>Só as vagas novas que atendem a estes critérios chegam no WhatsApp. Os resultados da busca continuam completos na página.</p>
       </div>
@@ -548,7 +548,7 @@
   <!-- Empregos: resultados de uma busca, com filtros aplicados no servidor -->
   <template id="t-emp-achados">
     <section class="conteudo">
-      <p class="voltar"><a href="#/empregos"><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
+      <p class="voltar"><a href="/empregos"><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
       <div class="emp-cabeca painel" data-cabeca></div>
       <div class="emp-filtros">
         <div class="pilulas" role="group" aria-label="Situação das vagas" data-filtro>
@@ -593,8 +593,8 @@
     </section>
   </template>
 
-  <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
-  <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=2e29bb399c"></script>
+  <script src="/vendor/chart.umd.min.js?v=cb55581410"></script>
+  <script src="/vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
+  <script src="/app.js?v=cb5577a590"></script>
 </body>
 </html>

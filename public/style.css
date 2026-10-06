@@ -1093,7 +1093,7 @@ body:not(.admin) [data-so-admin] { display: none; }
 .emp-b-fonte.emp-badge { font-weight: 500; color: var(--suave); background: transparent; border: 1px dashed var(--suave); }
 .emp-b-uf.emp-badge { color: var(--emp-concurso); background: color-mix(in srgb, var(--emp-concurso) 12%, transparent); border-color: color-mix(in srgb, var(--emp-concurso) 40%, transparent); }
 /* Pílula de filtro marcada com cor de badge: contador acompanha a cor */
-[class*="emp-b-"] input:checked + span .emp-conta { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
+.pilulas label[class*="emp-b-"] input:checked + span span.emp-conta { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
 .pilulas label[class*="emp-b-"] span .ic { width: 14px; height: 14px; }
 
 /* Abas com contagem e aviso de ação */

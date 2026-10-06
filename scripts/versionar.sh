@@ -6,6 +6,6 @@ set -e
 cd "$(dirname "$0")/../public"
 for f in tema.js app.js style.css vendor/chart.umd.min.js vendor/chartjs-adapter-date-fns.bundle.min.js; do
   v=$(sha1sum "$f" | cut -c1-10)
-  sed -i -E "s#(\"${f})(\?v=[0-9a-f]+)?\"#\1?v=${v}\"#" index.html
+  sed -i -E "s#(\"/?${f})(\?v=[0-9a-f]+)?\"#\1?v=${v}\"#" index.html
 done
 grep -oE '(href|src)="[^"]+\?v=[0-9a-f]+"' index.html
