@@ -37,6 +37,13 @@ Conta e Administração; marca, título e aba ativa (`aria-current`) seguem o en
 sem recarregar a página (o voltar do navegador funciona). Empregos conversa com `/api/empregos/…`
 (mesma sessão).
 
+Empregos: o badge de fonte mostra também as outras fontes onde a mesma vaga apareceu ("via Gupy · também
+em Adzuna, Infojobs"); fontes aparecem pelo nome (Adzuna, Gupy, PCI Concursos, Infojobs, Empregos.com.br,
+Remotar) no cartão, nos filtros, no alerta e na administração. Vaga sem modelo mostra "Modelo não informado";
+os filtros de modelo e contrato têm "Não informado" (`nao_informado`). Com a busca coletando, cartão e
+resultados mostram "Buscando vagas…" (Buscar agora desabilitado) e os resultados se atualizam a cada 15 s até
+a coleta terminar.
+
 A lista de aeroportos vem do backend (`/api/aeroportos`) uma vez por sessão.
 
 `public/vendor/` traz Chart.js 4 e o adaptador de datas (date-fns), sem CDN: a CSP da página só

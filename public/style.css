@@ -1104,3 +1104,10 @@ body:not(.admin) [data-so-admin] { display: none; }
   .emp-filtros [data-filtro] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; border-radius: 16px; }
   .emp-filtros [data-filtro] button { justify-content: center; display: inline-flex; align-items: center; gap: 4px; }
 }
+
+/* Empregos: coleta em andamento, modelo/contrato não informado, fonte com outras fontes */
+.emp-coletando { color: var(--primaria); font-weight: 600; }
+.emp-coletando .ic { animation: pulsar 1s ease-in-out infinite; }
+.emp-b-sem-modelo.emp-badge { font-weight: 500; color: var(--suave); background: var(--fundo-2); border-color: var(--borda); }
+.emp-b-nao_informado input:checked + span { color: var(--texto); background: var(--fundo-2); border-color: var(--suave); }
+.emp-b-fonte.emp-badge { white-space: normal; text-align: left; border-radius: 12px; }

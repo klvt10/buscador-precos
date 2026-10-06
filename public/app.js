@@ -1704,7 +1704,9 @@ const CONTRATOS = { clt: 'CLT', pj: 'PJ', estagio: 'Estágio', temporario: 'Temp
 const LIMITE_BUSCAS = 3;
 const listaDe = (x) => (Array.isArray(x) ? x : []);
 const numeroOu = (v, padrao = 0) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : padrao);
-const nomeFonteEmp = (f) => (!f ? '—' : String(f).length <= 3 ? String(f).toUpperCase() : String(f)[0].toUpperCase() + String(f).slice(1));
+// Nome legível de cada fonte (cartão, filtros, alerta e administração); fonte nova cai na regra genérica.
+const FONTES_NOMES = { adzuna: 'Adzuna', gupy: 'Gupy', pci: 'PCI Concursos', infojobs: 'Infojobs', empregos: 'Empregos.com.br', remotar: 'Remotar' };
+const nomeFonteEmp = (f) => (!f ? '—' : FONTES_NOMES[f] || (String(f).length <= 3 ? String(f).toUpperCase() : String(f)[0].toUpperCase() + String(f).slice(1)));
 
 // Data ISO, milissegundos ou {em}: devolve milissegundos ou null.
 function instante(v) {
@@ -1792,19 +1794,31 @@ function avisar(msg, texto, classe = '') {
 }
 
 // "Buscar agora": uma rodada fora de hora; o servidor libera uma a cada 10 min por busca.
-async function pedirColeta(caminho, botao, msg) {
+// Devolve true quando o servidor aceitou; aoAceitar() troca a tela para "Buscando vagas…".
+async function pedirColeta(caminho, botao, msg, aoAceitar) {
   botao.disabled = true;
   botao.classList.add('girando');
   avisar(msg, 'Pedindo a busca…');
   try {
     await api(caminho, { method: 'POST', body: {} });
     avisar(msg, 'Busca pedida. As vagas novas aparecem em alguns minutos.', 'ok');
+    if (aoAceitar) aoAceitar();
+    return true;
   } catch (e) {
     avisar(msg, e.status === 429 ? 'Houve uma busca há pouco: aguarde 10 min para buscar de novo.' : e.message, 'erro');
+    return false;
   } finally {
     botao.classList.remove('girando');
-    setTimeout(() => { botao.disabled = false; }, 3000);
+    setTimeout(() => { if (!botao.dataset.coletando) botao.disabled = false; }, 3000);
   }
+}
+const coletandoAgora = (b) => !!(b?.coletando || b?.ultima_coleta?.coletando);
+// Botão "Buscar agora" preso enquanto a busca está na fila ou coletando.
+function botaoBuscar(botao, b) {
+  const sim = coletandoAgora(b);
+  botao.disabled = sim;
+  if (sim) botao.dataset.coletando = '1'; else delete botao.dataset.coletando;
+  botao.title = sim ? 'Já está buscando vagas para esta busca' : '';
 }
 
 function contadoresBusca(b) {
@@ -1818,6 +1832,9 @@ function contadoresBusca(b) {
 
 function ultimaColeta(b) {
   const uc = b.ultima_coleta;
+  if (coletandoAgora(b)) {
+    return el('p', { class: 'emp-coleta emp-coletando', role: 'status' }, icone('lupa'), el('span', {}, 'Buscando vagas…'));
+  }
   const t = instante(uc);
   const p = el('p', { class: 'emp-coleta' }, icone('relogio'),
     el('span', t ? { title: dataHora(t) } : {}, t ? `Última coleta ${relativo(t)}` : 'Ainda sem coleta: a primeira sai em poucos minutos'));
@@ -1863,7 +1880,13 @@ function cartaoBusca(b) {
     } finally { chave.disabled = false; }
   });
   const buscar = el('button', { type: 'button', class: 'btn' }, icone('lupa'), 'Buscar agora');
-  buscar.addEventListener('click', () => pedirColeta(`empregos/buscas/${encodeURIComponent(b.id)}/coletar`, buscar, msg));
+  const coleta = ultimaColeta(b);
+  buscar.addEventListener('click', () => pedirColeta(`empregos/buscas/${encodeURIComponent(b.id)}/coletar`, buscar, msg, () => {
+    b.coletando = true;
+    botaoBuscar(buscar, b);
+    coleta.replaceWith(ultimaColeta(b));
+  }));
+  botaoBuscar(buscar, b);
   marcarEstado();
   card.append(
     el('header', { class: 'emp-cartao-topo' },
@@ -1874,7 +1897,7 @@ function cartaoBusca(b) {
       estado),
     termosBusca(b),
     contadoresBusca(b),
-    ultimaColeta(b),
+    coleta,
     el('div', { class: 'emp-chaves' },
       el('label', { class: 'interruptor emp-interruptor' }, chave, el('span', { class: 'interruptor-trilho', 'aria-hidden': 'true' }), el('span', {}, 'Coleta ligada')),
       seloAlerta(b)),
@@ -1920,11 +1943,15 @@ async function telaEmpregos() {
   try { await carregar(); } catch (e) {
     caixa.replaceChildren(el('p', { class: 'nota erro' }, e.message));
   }
-  // Recarrega a cada minuto, mas não por cima de uma mensagem na tela.
+  // Recarrega a cada minuto (a cada 15 s com alguma busca coletando), mas não por cima de uma mensagem.
+  let voltas = 0;
   atualizar = setInterval(() => {
-    if ($$('.emp-cartao .msg', t).some((m) => m.textContent)) return;
+    voltas += 1;
+    const coletando = $$('.emp-coletando', t).length > 0;
+    if (!coletando && voltas % 4) return;
+    if ($$('.emp-cartao .msg', t).some((m) => m.textContent && !m.classList.contains('ok'))) return;
     carregar().catch(() => {});
-  }, 60e3);
+  }, 15e3);
 }
 
 // Lista de etiquetas editável (termos e palavras a excluir): Enter ou vírgula acrescenta, × tira.
@@ -2000,6 +2027,7 @@ function telaErroEmp(texto, voltar = '/empregos') {
 }
 
 let idCidade = 0;
+let avisoEmpregos = null; // mensagem do formulário mostrada na tela de resultados
 
 async function telaEmpForm(id) {
   const t = montar('t-emp-form');
@@ -2141,6 +2169,9 @@ async function telaEmpForm(id) {
         : await api('empregos/buscas', { method: 'POST', body });
       const salva = buscaDaResposta(r);
       avisar(msg, 'Salvo.', 'ok');
+      avisoEmpregos = r?.coleta_agendada
+        ? (busca ? 'Busca salva. Coletando vagas agora…' : 'Busca criada. Coletando vagas agora…')
+        : (busca ? 'Busca salva.' : 'Busca criada.');
       const alvo = salva?.id ?? busca?.id;
       ir(alvo != null ? `/empregos/${encodeURIComponent(alvo)}` : '/empregos');
     });
@@ -2274,7 +2305,7 @@ const VAZIO_ACHADOS = {
 const ICONE_MODELO = { presencial: 'predio', hibrido: 'metade', remoto: 'casa' };
 
 function badgeModelo(v) {
-  if (!v.modelo) return null;
+  if (!v.modelo) return el('span', { class: 'emp-badge emp-b-sem-modelo' }, 'Modelo não informado');
   return el('span', { class: `emp-badge emp-b-${v.modelo}` }, ICONE_MODELO[v.modelo] ? icone(ICONE_MODELO[v.modelo]) : null, MODELOS[v.modelo] || v.modelo,
     v.modelo_inferido ? el('span', { class: 'emp-b-aprox', title: 'Modelo deduzido do texto do anúncio' }, 'aprox.') : null);
 }
@@ -2350,7 +2381,9 @@ function cartaoAchado(a, { aba, aoMudar }) {
     if (m) badges.append(m);
     if (v.contrato) badges.append(el('span', { class: `emp-badge emp-b-${v.contrato}` }, CONTRATOS[v.contrato] || v.contrato));
   }
-  if (v.fonte) badges.append(el('span', { class: 'emp-badge emp-b-fonte' }, `via ${nomeFonteEmp(v.fonte)}`));
+  // Mesma vaga vista em outras fontes: "via Gupy · também em Adzuna, Infojobs".
+  const tambem = [...new Set(listaDe(v.fontes_tambem).filter((x) => x && x !== v.fonte))].map(nomeFonteEmp);
+  if (v.fonte) badges.append(el('span', { class: 'emp-badge emp-b-fonte' }, `via ${nomeFonteEmp(v.fonte)}${tambem.length ? ` · também em ${tambem.join(', ')}` : ''}`));
 
   const abrir = link
     ? el('a', { class: 'btn primario pequeno', href: link, target: '_blank', rel: 'noopener noreferrer' }, concurso ? 'Abrir edital' : 'Abrir vaga', icone('externo'))
@@ -2461,7 +2494,12 @@ async function telaEmpAchados(id, query) {
     document.title = `${busca.profissao || 'Busca'} · Buscador de Empregos`;
     const msg = el('span', { class: 'msg', role: 'status' });
     const buscar = el('button', { type: 'button', class: 'btn primario' }, icone('lupa'), 'Buscar agora');
-    buscar.addEventListener('click', () => pedirColeta(`empregos/buscas/${encodeURIComponent(busca.id)}/coletar`, buscar, msg));
+    buscar.addEventListener('click', () => pedirColeta(`empregos/buscas/${encodeURIComponent(busca.id)}/coletar`, buscar, msg, () => {
+      busca.coletando = true;
+      desenharCabeca();
+      acompanharColeta();
+    }));
+    botaoBuscar(buscar, busca);
     cabeca.replaceChildren(
       el('div', { class: 'emp-cabeca-topo' },
         el('div', { class: 'emp-cartao-titulo' },
@@ -2492,7 +2530,8 @@ async function telaEmpAchados(id, query) {
     fs.semSalario.checked = fx.sem_salario;
     for (const r of $$('input[name=dias]', barra)) r.checked = r.value === fx.dias;
   };
-  const ROTULOS = { modelo: MODELOS, contrato: CONTRATOS, fonte: {} };
+  // "Não informado" (nao_informado) filtra vagas sem o campo; a contagem vem das facetas.
+  const ROTULOS = { modelo: { ...MODELOS, nao_informado: 'Não informado' }, contrato: { ...CONTRATOS, nao_informado: 'Não informado' }, fonte: {} };
   let facetas = {};
   const desenharFacetas = () => {
     const fonteDe = { modelo: facetas.por_modelo, contrato: facetas.por_contrato, fonte: facetas.por_fonte };
@@ -2540,12 +2579,15 @@ async function telaEmpAchados(id, query) {
     p.set('pagina', String(pagina));
     return p.toString();
   };
-  const carregar = async (reiniciar) => {
+  // silencioso: recarga automática durante a coleta, sem trocar a lista por "Carregando…".
+  const carregar = async (reiniciar, silencioso = false) => {
     const meu = ++pedido;
     if (reiniciar) {
       pagina = 1;
-      mais.hidden = true;
-      caixa.replaceChildren(el('p', { class: 'vazio' }, 'Carregando…'));
+      if (!silencioso) {
+        mais.hidden = true;
+        caixa.replaceChildren(el('p', { class: 'vazio' }, 'Carregando…'));
+      }
     }
     mais.disabled = true;
     try {
@@ -2614,7 +2656,27 @@ async function telaEmpAchados(id, query) {
     aplicar();
   });
   mais.addEventListener('click', () => carregar(false));
+  // Mensagem deixada pelo formulário (busca criada ou salva).
+  if (avisoEmpregos) { avisar($('[data-aviso]', t), avisoEmpregos, 'ok'); avisoEmpregos = null; }
   await carregar(true);
+  acompanharColeta();
+
+  // Enquanto a busca coleta: a cada 15 s relê a busca e a lista (só a 1ª página, para não perder
+  // o que já foi carregado com "Carregar mais"); para quando a coleta termina, com uma última leitura.
+  function acompanharColeta() {
+    if (atualizar || !coletandoAgora(busca)) return;
+    const meuTimer = setInterval(async () => {
+      if (atualizar !== meuTimer) { clearInterval(meuTimer); return; }
+      let nova = null;
+      try { nova = await buscaPorId(id); } catch { return; }
+      if (atualizar !== meuTimer) return;
+      if (nova) { busca = nova; desenharCabeca(); contagensDaBusca(); desenharContagens(); }
+      const terminou = !coletandoAgora(busca);
+      if (pagina <= 2) carregar(true, true);
+      if (terminou) { clearInterval(meuTimer); atualizar = null; }
+    }, 15e3);
+    atualizar = meuTimer;
+  }
 }
 
 // --- Administração › Empregos -------------------------------------------------------------------
