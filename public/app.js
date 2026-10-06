@@ -81,7 +81,9 @@ function el(tag, attrs = {}, ...filhos) {
 async function api(caminho, { method = 'GET', body } = {}) {
   const r = await fetch(`api/${caminho}`, {
     method,
-    headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+    // Toda requisição que altera algo vai como JSON, mesmo sem corpo (DELETE, POST sem dados):
+    // o servidor recusa com 403 qualquer POST/PUT/DELETE que não seja JSON do próprio site.
+    headers: method !== 'GET' ? { 'Content-Type': 'application/json' } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
   });
@@ -1143,8 +1145,8 @@ async function telaDetalhe(id, { comoAdmin = false } = {}) {
   });
   $('[data-apagar]', t).addEventListener('click', async () => {
     if (!confirm('Apagar este alerta e todo o histórico dele?')) return;
-    await api(`alertas/${id}`, { method: 'DELETE' });
-    ir('#/alertas');
+    const r = await api(`alertas/${id}`, { method: 'DELETE' }).catch((e) => alert(e.message));
+    if (r) ir('#/alertas');
   });
 }
 
