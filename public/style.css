@@ -34,6 +34,8 @@
   --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
   --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
   --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
+  --emp-cor-catho: #78350f; --emp-cor-catho-txt: #ffffff;
+  --emp-cor-careerjet: #a21caf; --emp-cor-careerjet-txt: #ffffff;
   --raio: 10px;
   --realce: #fff3b0;
   --sombra: 0 12px 32px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .08);
@@ -82,6 +84,8 @@
   --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
   --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
   --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
+  --emp-cor-catho: #78350f; --emp-cor-catho-txt: #ffffff;
+  --emp-cor-careerjet: #a21caf; --emp-cor-careerjet-txt: #ffffff;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -129,6 +133,8 @@
   --emp-cor-empregos: #ea580c; --emp-cor-empregos-txt: #111827;
   --emp-cor-remotar: #047857; --emp-cor-remotar-txt: #ffffff;
   --emp-cor-pci: #4338ca; --emp-cor-pci-txt: #ffffff;
+  --emp-cor-catho: #78350f; --emp-cor-catho-txt: #ffffff;
+  --emp-cor-careerjet: #a21caf; --emp-cor-careerjet-txt: #ffffff;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -1137,6 +1143,8 @@ body:not(.admin) [data-so-admin] { display: none; }
 .emp-cor-empregos { --c: var(--emp-cor-empregos); --ct: var(--emp-cor-empregos-txt); }
 .emp-cor-remotar { --c: var(--emp-cor-remotar); --ct: var(--emp-cor-remotar-txt); }
 .emp-cor-pci { --c: var(--emp-cor-pci); --ct: var(--emp-cor-pci-txt); }
+.emp-cor-catho { --c: var(--emp-cor-catho); --ct: var(--emp-cor-catho-txt); }
+.emp-cor-careerjet { --c: var(--emp-cor-careerjet); --ct: var(--emp-cor-careerjet-txt); }
 .emp-badge { height: 24px; padding: 0 9px; border-radius: 7px; font-size: .76rem; font-weight: 600; line-height: 1; border: 0; }
 .emp-badge.emp-cor { color: var(--ct); background: var(--c); }
 .emp-badge.emp-cor .ic { width: 13px; height: 13px; }

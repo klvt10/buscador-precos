@@ -1705,7 +1705,7 @@ const LIMITE_BUSCAS = 3;
 const listaDe = (x) => (Array.isArray(x) ? x : []);
 const numeroOu = (v, padrao = 0) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : padrao);
 // Nome legível de cada fonte (cartão, filtros, alerta e administração); fonte nova cai na regra genérica.
-const FONTES_NOMES = { adzuna: 'Adzuna', gupy: 'Gupy', pci: 'PCI Concursos', infojobs: 'Infojobs', empregos: 'Empregos.com.br', remotar: 'Remotar' };
+const FONTES_NOMES = { adzuna: 'Adzuna', gupy: 'Gupy', pci: 'PCI Concursos', infojobs: 'Infojobs', empregos: 'Empregos.com.br', remotar: 'Remotar', catho: 'Catho', careerjet: 'Careerjet' };
 // Cor fixa por valor (modelo, contrato e fonte): classe emp-cor-<valor>; a cor mora nos tokens do CSS.
 const classeCor = (valor) => `emp-cor emp-cor-${String(valor || 'nao_informado').toLowerCase().replace(/[^a-z0-9_-]/g, '')}`;
 const badgeFonte = (f, mini = false) => el('span', { class: `emp-badge${mini ? ' emp-mini' : ''} ${classeCor(f)}` }, nomeFonteEmp(f));
@@ -2748,7 +2748,7 @@ function desenharFontesEmp(caixa, lista, recarregar) {
     const erroMaisNovo = erro && (!ok || (erro.em != null && erro.em > ok));
     let estado = 'ok';
     let texto = 'Funcionando';
-    if (f.ativa === false) { estado = 'desligada'; texto = 'Desligada'; }
+    if (f.ativa === false) { estado = 'desligada'; texto = f.motivo ? `Desligada · ${f.motivo}` : 'Desligada'; }
     else if (erroMaisNovo) { estado = 'falha'; texto = 'Última coleta falhou'; }
     else if (!ok) { estado = 'espera'; texto = 'Ainda sem coleta'; }
     const chave = el('input', { type: 'checkbox', role: 'switch', 'aria-label': `${nomeFonteEmp(f.nome)} ligada` });
