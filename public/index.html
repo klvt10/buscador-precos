@@ -7,7 +7,7 @@
   <title>Buscador de Passagens</title>
   <meta name="color-scheme" content="light dark">
   <script src="tema.js?v=728c87caaf"></script>
-  <link rel="stylesheet" href="style.css?v=b0157d8b05">
+  <link rel="stylesheet" href="style.css?v=2b87a61fc7">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true">
@@ -30,18 +30,25 @@
     <symbol id="i-alvo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></g></symbol>
     <symbol id="i-trofeu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></symbol>
     <symbol id="i-sair" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-maleta" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/></g></symbol>
+    <symbol id="i-pessoa" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></g></symbol>
+    <symbol id="i-estrela" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-fechar" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-externo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
     <symbol id="i-zap" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.5z"/></symbol>
   </svg>
 
   <header class="barra" id="barra">
     <div class="barra-dentro">
       <a href="#/alertas" class="marca">
-        <span class="marca-logo"><svg><use href="#i-aviao"/></svg></span>
+        <span class="marca-logo"><svg><use href="#i-aviao" data-marca-icone/></svg></span>
         <span class="marca-nome">Buscador de Passagens</span>
       </a>
       <nav class="barra-nav" data-so-logado>
-        <a href="#/alertas" data-nav="alertas">Alertas</a>
-        <a href="#/conta" data-nav="conta">Conta</a>
+        <a href="#/alertas" data-nav="passagens">Passagens</a>
+        <a href="#/empregos" data-nav="empregos">Empregos</a>
+        <a href="#/conta" data-nav="conta" aria-label="Conta"><svg class="ic nav-curto" aria-hidden="true"><use href="#i-pessoa"/></svg><span class="nav-longo">Conta</span></a>
         <a href="#/admin" data-nav="admin" data-so-admin aria-label="Administração"><span class="nav-longo">Administração</span><span class="nav-curto" aria-hidden="true">Admin</span></a>
       </nav>
       <div class="barra-acoes">
@@ -359,6 +366,7 @@
         <button type="button" role="tab" data-aba="fontes" aria-selected="false">Sites <span class="aba-n" data-n="fontes"></span></button>
         <button type="button" role="tab" data-aba="alertas" aria-selected="false">Alertas ligados <span class="aba-n" data-n="alertas"></span></button>
         <button type="button" role="tab" data-aba="usuarios" aria-selected="false">Usuários <span class="aba-n" data-n="usuarios"></span></button>
+        <button type="button" role="tab" data-aba="empregos" aria-selected="false">Empregos <span class="aba-n" data-n="empregos"></span></button>
       </div>
       <section class="painel operacao" role="tabpanel" data-painel="geral" data-operacao></section>
       <section role="tabpanel" data-painel="fontes" hidden>
@@ -373,6 +381,147 @@
         <div class="painel-topo"><h2>Usuários</h2><p class="nota">Mais recentes primeiro.</p></div>
         <div data-usuarios-lista></div>
       </section>
+      <section class="emp-adm" role="tabpanel" data-painel="empregos" hidden>
+        <div class="painel" data-emp-adm-resumo>
+          <div class="painel-topo"><h2>Empregos</h2><p class="nota">Buscas de vagas e concursos: coletas a cada 3 h entre 07:00 e 22:00.</p></div>
+          <div class="op-numeros" data-emp-adm-numeros></div>
+        </div>
+        <div class="painel">
+          <div class="painel-topo"><h2>Vagas novas por fonte</h2><p class="nota">Últimos 14 dias.</p></div>
+          <div class="grafico emp-grafico"><canvas></canvas></div>
+          <p class="vazio" data-emp-adm-grafico-vazio hidden>Ainda não há coletas nos últimos 14 dias.</p>
+        </div>
+        <div class="painel">
+          <div class="painel-topo"><h2>Fontes</h2><p class="nota">Fonte desligada fica fora das próximas coletas de todas as buscas.</p></div>
+          <div class="adm-fontes" data-emp-adm-fontes></div>
+        </div>
+        <div class="painel">
+          <div class="painel-topo"><h2>Buscas</h2><p class="nota">Todas as buscas, de todos os usuários.</p></div>
+          <div data-emp-adm-buscas></div>
+        </div>
+        <div class="painel">
+          <div class="painel-topo"><h2>Coletas recentes</h2><p class="nota">Últimas 50, mais recentes primeiro.</p></div>
+          <div data-emp-adm-coletas></div>
+        </div>
+        <div class="painel">
+          <div class="painel-topo"><h2>Envios recentes</h2><p class="nota">Últimas 50 mensagens no WhatsApp.</p></div>
+          <div data-emp-adm-envios></div>
+        </div>
+      </section>
+    </section>
+  </template>
+
+  <!-- Empregos: lista de buscas -->
+  <template id="t-empregos">
+    <section class="conteudo">
+      <div class="topo">
+        <div>
+          <h1>Minhas buscas de emprego</h1>
+          <p class="sub" data-limite></p>
+        </div>
+        <div class="emp-topo-acao" data-nova-lugar></div>
+      </div>
+      <p class="emp-aviso" data-aviso-limite hidden></p>
+      <div class="lista emp-lista" data-lista></div>
+    </section>
+  </template>
+
+  <!-- Empregos: formulário de busca (nova e edição) -->
+  <template id="t-emp-form">
+    <section class="conteudo emp-estreito">
+      <div class="novo-cabeca">
+        <p class="voltar"><a href="#/empregos" data-voltar><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
+        <h1 data-titulo>Nova busca</h1>
+        <p class="sub">Vagas e concursos são procurados sozinhos ao longo do dia; as novas chegam no WhatsApp.</p>
+      </div>
+      <form class="emp-form" data-form="busca" novalidate>
+        <section class="fa-bloco" aria-labelledby="emp-b1">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">1</span><h2 id="emp-b1">Profissão</h2></header>
+          <label class="campo"><span class="rotulo">Profissão ou cargo</span><input name="profissao" maxlength="80" placeholder="Ex.: Fonoaudióloga" required autocomplete="off"></label>
+          <div class="emp-campo">
+            <span class="rotulo" id="emp-termos-rotulo">Termos no título da vaga</span>
+            <div data-chips="termos"></div>
+            <p class="fa-dica" data-termos-dica>A vaga entra quando o título contém algum destes termos (sem diferença de acento ou maiúscula). Ao sair do campo de profissão, os termos são sugeridos; dá para tirar e acrescentar.</p>
+          </div>
+          <div class="emp-campo">
+            <span class="rotulo" id="emp-excluir-rotulo">Palavras que descartam a vaga <span class="opcional">(opcional)</span></span>
+            <div data-chips="excluir"></div>
+            <p class="fa-dica">Título com qualquer uma destas palavras fica de fora. Ex.: estágio, coordenador.</p>
+          </div>
+        </section>
+
+        <section class="fa-bloco" aria-labelledby="emp-b2">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">2</span><h2 id="emp-b2">Onde</h2></header>
+          <div class="emp-cidades" data-cidades></div>
+          <div class="linha-botao"><button type="button" class="btn pequeno" data-mais-cidade><svg class="ic"><use href="#i-mais"/></svg>Adicionar cidade</button><span class="nota" data-cidades-nota>Até 3 cidades.</span></div>
+          <p class="erro" data-erro-cidades role="alert"></p>
+          <label class="interruptor"><input type="checkbox" name="aceita_remoto" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas remotas de qualquer lugar</span></label>
+          <fieldset class="emp-grupo">
+            <legend class="rotulo">Modelo de trabalho</legend>
+            <div class="pilulas pilulas-soltas" role="radiogroup" aria-label="Modelo de trabalho">
+              <label><input type="radio" name="modelo" value="qualquer" checked><span>Qualquer</span></label>
+              <label><input type="radio" name="modelo" value="presencial"><span>Presencial</span></label>
+              <label><input type="radio" name="modelo" value="hibrido"><span>Híbrido</span></label>
+              <label><input type="radio" name="modelo" value="remoto"><span>Remoto</span></label>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="fa-bloco" aria-labelledby="emp-b3">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">3</span><h2 id="emp-b3">Contrato e salário</h2></header>
+          <fieldset class="emp-grupo">
+            <legend class="rotulo">Contrato</legend>
+            <div class="pilulas pilulas-soltas" role="radiogroup" aria-label="Contrato">
+              <label><input type="radio" name="contrato" value="qualquer" checked><span>Qualquer</span></label>
+              <label><input type="radio" name="contrato" value="clt"><span>CLT</span></label>
+              <label><input type="radio" name="contrato" value="pj"><span>PJ</span></label>
+              <label><input type="radio" name="contrato" value="estagio"><span>Estágio</span></label>
+              <label><input type="radio" name="contrato" value="temporario"><span>Temporário</span></label>
+            </div>
+          </fieldset>
+          <label class="campo emp-salario"><span class="rotulo">Salário mínimo por mês <span class="opcional">(opcional)</span></span><input name="salario_minimo" inputmode="numeric" autocomplete="off" placeholder="Sem mínimo"></label>
+          <label class="interruptor"><input type="checkbox" name="incluir_sem_salario" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Incluir vagas sem salário informado</span></label>
+          <p class="fa-dica">Vaga com salário informado abaixo do mínimo fica de fora. Valores de vagas anunciados por ano são convertidos para o mês.</p>
+        </section>
+
+        <section class="fa-bloco" aria-labelledby="emp-b4">
+          <header class="fa-bloco-topo"><span class="fa-passo" aria-hidden="true">4</span><h2 id="emp-b4">Avisos</h2></header>
+          <label class="interruptor"><input type="checkbox" name="concursos" role="switch"><span class="interruptor-trilho" aria-hidden="true"></span><span>Avisar também de concursos com o cargo</span></label>
+          <label class="interruptor"><input type="checkbox" name="alertar" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Avisar no WhatsApp</span></label>
+          <label class="interruptor"><input type="checkbox" name="ativa" role="switch" checked><span class="interruptor-trilho" aria-hidden="true"></span><span>Busca ligada</span></label>
+          <p class="fa-dica">No WhatsApp: até 5 vagas por mensagem, no máximo 6 mensagens por dia, entre 08:00 e 21:00. O resto fica no painel.</p>
+        </section>
+
+        <div class="emp-form-acoes">
+          <button type="submit" class="btn primario grande" data-salvar>Criar busca</button>
+          <a class="btn fantasma" href="#/empregos" data-cancelar>Cancelar</a>
+          <span class="msg" data-msg role="status"></span>
+        </div>
+      </form>
+      <div class="painel perigo" data-apagar-lugar hidden>
+        <div class="perigo-linha">
+          <div><h2>Apagar busca</h2><p class="nota">Apaga a busca e a lista de vagas encontradas para ela.</p></div>
+          <button type="button" class="btn perigo" data-apagar><svg class="ic"><use href="#i-lixo"/></svg>Apagar busca</button>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <!-- Empregos: achados de uma busca -->
+  <template id="t-emp-achados">
+    <section class="conteudo">
+      <p class="voltar"><a href="#/empregos"><svg class="ic"><use href="#i-seta"/></svg>Minhas buscas</a></p>
+      <div class="emp-cabeca painel" data-cabeca></div>
+      <div class="emp-filtros">
+        <div class="pilulas" role="group" aria-label="Filtro dos achados" data-filtro>
+          <button type="button" data-f="novos" class="ativo">Novos</button>
+          <button type="button" data-f="todos">Todos</button>
+          <button type="button" data-f="favoritos">Favoritos</button>
+        </div>
+        <span class="nota" data-contagem></span>
+      </div>
+      <div class="emp-achados" data-achados></div>
+      <div class="emp-mais"><button type="button" class="btn" data-mais hidden>Carregar mais</button></div>
     </section>
   </template>
 
@@ -417,6 +566,6 @@
 
   <script src="vendor/chart.umd.min.js?v=cb55581410"></script>
   <script src="vendor/chartjs-adapter-date-fns.bundle.min.js?v=94fb6f22cc"></script>
-  <script src="app.js?v=22a47d4031"></script>
+  <script src="app.js?v=17d8cd94ed"></script>
 </body>
 </html>

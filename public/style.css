@@ -13,6 +13,10 @@
   --serie-total: #1f6feb;
   --serie-media: #8c959f;
   --serie-gatilho: #1a7f37;
+  --emp-serie-1: #1f6feb;
+  --emp-serie-2: #bf8700;
+  --emp-serie-3: #8250df;
+  --emp-serie-4: #1a7f37;
   --raio: 10px;
   --realce: #fff3b0;
   --sombra: 0 12px 32px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .08);
@@ -41,6 +45,10 @@
   --serie-total: #5b9dff;
   --serie-media: #6e7681;
   --serie-gatilho: #3fb950;
+  --emp-serie-1: #5b9dff;
+  --emp-serie-2: #d29922;
+  --emp-serie-3: #a371f7;
+  --emp-serie-4: #3fb950;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -68,6 +76,10 @@
   --serie-total: #5b9dff;
   --serie-media: #6e7681;
   --serie-gatilho: #3fb950;
+  --emp-serie-1: #5b9dff;
+  --emp-serie-2: #d29922;
+  --emp-serie-3: #a371f7;
+  --emp-serie-4: #3fb950;
   --realce: #5a4a00;
   --sombra: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4);
   --sombra-leve: 0 1px 2px rgba(0, 0, 0, .35);
@@ -842,3 +854,136 @@ body:not(.admin) [data-so-admin] { display: none; }
 .adm-tabela tr.clicavel:focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }
 .adm-tabela tr.clicavel td:last-child::after { content: "›"; margin-left: 10px; color: var(--suave); font-size: 1.1rem; }
 @media (max-width: 700px) { .adm-tabela tr.clicavel td:last-child::after { content: none; } }
+
+/* Empregos ------------------------------------------------------------------------------------ */
+.barra-nav a { display: inline-flex; align-items: center; gap: 6px; }
+.marca-logo.emp-marca svg, .emp-vazio-icone svg { transform: none; }
+.emp-aviso { margin: 0; padding: 10px 14px; border-radius: 12px; font-size: .88rem; color: var(--amarelo); background: color-mix(in srgb, var(--amarelo) 11%, transparent); border: 1px solid color-mix(in srgb, var(--amarelo) 30%, transparent); }
+.emp-lista { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+
+/* Cartão de busca */
+.emp-cartao {
+  display: grid; gap: 12px; min-width: 0; padding: 18px;
+  background: var(--card); border: 1px solid var(--borda); border-radius: 18px; box-shadow: var(--sombra-leve);
+  border-top: 4px solid var(--primaria);
+}
+.emp-cartao.pausada { border-top-color: var(--suave); }
+.emp-cartao-topo, .emp-cabeca-topo { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.emp-cartao-icone { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; color: var(--primaria); background: var(--primaria-suave); }
+.emp-cartao-icone svg { width: 20px; height: 20px; }
+.emp-cartao.pausada .emp-cartao-icone { color: var(--suave); background: var(--fundo-2); }
+.emp-cartao-titulo { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.emp-cartao-titulo h1, .emp-cartao-titulo h2 { margin: 0; overflow-wrap: anywhere; }
+.emp-cartao-titulo h2 { font-size: 1.15rem; line-height: 1.25; }
+.emp-local { margin: 0; color: var(--suave); font-size: .88rem; overflow-wrap: anywhere; }
+.emp-estado { flex: none; padding: 3px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--verde); background: color-mix(in srgb, var(--verde) 13%, transparent); }
+.emp-cartao.pausada .emp-estado, .emp-estado.pausada { color: var(--suave); background: var(--fundo-2); }
+.emp-cartao .ca-chips .chip, .emp-cabeca .ca-chips .chip { white-space: normal; }
+.emp-termos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.emp-termos li { padding: 2px 8px; border-radius: 6px; font: .78rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--primaria); background: var(--primaria-suave); overflow-wrap: anywhere; }
+.emp-contadores { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: .9rem; color: var(--suave); font-variant-numeric: tabular-nums; }
+.emp-contadores strong { color: var(--texto); }
+.emp-contadores strong.tem { color: var(--verde); }
+.emp-coleta { display: flex; align-items: center; gap: 6px; margin: 0; font-size: .82rem; color: var(--suave); }
+.emp-coleta .ic { width: 14px; height: 14px; }
+.emp-coleta-caixa { display: grid; gap: 4px; min-width: 0; }
+.emp-coleta-erro { margin: 0; font-size: .82rem; color: var(--vermelho); overflow-wrap: anywhere; }
+.emp-chaves { display: flex; flex-wrap: wrap; gap: 0 18px; padding-top: 4px; border-top: 1px dashed var(--borda); }
+.emp-interruptor { height: 40px; font-size: .88rem; }
+.emp-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.emp-cartao > .msg:empty, .emp-achado > .msg:empty { display: none; }
+
+/* Formulário */
+.emp-estreito { max-width: 760px; width: 100%; margin: 0 auto; }
+.emp-form { display: grid; gap: 16px; min-width: 0; }
+.emp-campo { display: grid; gap: 8px; min-width: 0; }
+.emp-grupo { margin: 0; padding: 0; border: 0; display: grid; gap: 8px; min-width: 0; }
+.emp-grupo legend { padding: 0; margin-bottom: 8px; }
+.emp-grupo .pilulas { max-width: 100%; flex-wrap: wrap; }
+.emp-chips { display: grid; gap: 8px; min-width: 0; }
+.emp-chips-lista { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.emp-chip { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 3px 4px 3px 10px; border-radius: 999px; font-size: .86rem; color: var(--texto); background: var(--primaria-suave); border: 1px solid color-mix(in srgb, var(--primaria) 30%, transparent); }
+.emp-chip span { min-width: 0; overflow-wrap: anywhere; }
+.emp-chip-tirar { display: grid; place-items: center; flex: none; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--suave); cursor: pointer; }
+.emp-chip-tirar:hover { color: var(--vermelho); background: color-mix(in srgb, var(--vermelho) 10%, transparent); }
+.emp-chip-tirar:focus-visible { outline: 2px solid var(--primaria); outline-offset: 1px; }
+.emp-chip-tirar svg { width: 14px; height: 14px; }
+.emp-chips-linha { display: flex; gap: 8px; min-width: 0; }
+.emp-chips-entrada { flex: 1; min-width: 0; }
+.emp-chips-linha .btn { height: 44px; }
+.emp-cidades { display: grid; gap: 10px; min-width: 0; }
+.emp-cidade { display: grid; grid-template-columns: minmax(0, 1fr) 96px 44px; gap: 8px; align-items: end; min-width: 0; }
+.emp-cidade input { width: 100%; }
+.emp-cidade select {
+  width: 100%; min-width: 0; height: 44px; padding: 0 8px; font: inherit; color: var(--texto);
+  background: var(--fundo); border: 1px solid var(--borda); border-radius: 10px; cursor: pointer;
+}
+.emp-cidade select:focus { outline: none; background: var(--card); border-color: var(--primaria); box-shadow: 0 0 0 3px var(--primaria-suave); }
+.emp-cidade select[aria-invalid="true"] { border-color: var(--vermelho); }
+.emp-cidade .icone-btn { width: 44px; height: 44px; }
+.emp-cidade .icone-btn[hidden] { display: block !important; visibility: hidden; }
+.emp-salario input { max-width: 260px; }
+.emp-form-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.emp-form-acoes .msg:empty { display: none; }
+
+/* Achados */
+.emp-cabeca { gap: 12px; }
+.emp-cabeca h1 { font-size: 1.5rem; }
+.emp-filtros { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.emp-achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: start; }
+.emp-achados > .vazio, .emp-achados > .nota { grid-column: 1 / -1; }
+.emp-achados-vazio { padding: 32px 16px; background: var(--card); border: 1px dashed var(--borda); border-radius: 16px; }
+.emp-achado {
+  position: relative; display: grid; gap: 8px; min-width: 0; padding: 16px; overflow: hidden;
+  background: var(--card); border: 1px solid var(--borda); border-radius: 16px; box-shadow: var(--sombra-leve);
+}
+.emp-achado[data-status="novo"] { border-left: 4px solid var(--primaria); }
+.emp-achado[data-status="favorito"] { border-left: 4px solid var(--amarelo); }
+.emp-achado.concurso { border-left: 4px solid var(--emp-serie-3); }
+.emp-faixa { margin: -16px -16px 4px; padding: 4px 16px; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--emp-serie-3); }
+.emp-achado-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-width: 0; }
+.emp-achado h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.emp-novo { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primaria-texto); background: var(--primaria); }
+.emp-empregador { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.emp-achado .chip { white-space: normal; }
+.emp-inferido { margin-left: 4px; padding: 0 5px; border-radius: 4px; font-size: .68rem; color: var(--suave); background: var(--fundo-2); }
+.emp-salario-valor { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.emp-salario-valor.sem { font-weight: 400; font-size: .88rem; color: var(--suave); }
+.emp-meta { margin: 0; font-size: .8rem; color: var(--suave); }
+.emp-achado-acoes { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--borda); }
+.emp-achado-acoes .btn .ic { width: 15px; height: 15px; }
+.emp-achado-acoes .btn[aria-pressed="true"] { color: var(--verde); border-color: color-mix(in srgb, var(--verde) 40%, var(--borda)); }
+.emp-achado-acoes .emp-fav[aria-pressed="true"] { color: var(--amarelo); border-color: color-mix(in srgb, var(--amarelo) 45%, var(--borda)); background: color-mix(in srgb, var(--amarelo) 9%, transparent); }
+.emp-achado-acoes .emp-fav[aria-pressed="true"] svg path { fill: currentColor; }
+.emp-achado-acoes .emp-descartar { color: var(--suave); }
+.emp-achado-acoes .emp-descartar:hover { color: var(--vermelho); }
+.emp-mais { display: flex; justify-content: center; }
+
+/* Administração › Empregos */
+.emp-adm { display: grid; gap: 16px; min-width: 0; }
+.emp-grafico { height: 280px; min-width: 0; }
+.op-numero.emp-num-falha strong { color: var(--vermelho); }
+.emp-erro { color: var(--vermelho); overflow-wrap: anywhere; }
+.emp-ok { color: var(--verde); font-weight: 600; }
+.emp-adm-coleta { display: grid; gap: 2px; }
+.emp-adm-coleta small { font-size: .78rem; }
+.emp-adm-acao { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.emp-adm-acao .msg { font-size: .8rem; }
+.emp-adm .adm-fontes { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.emp-adm .adm-fonte { box-shadow: none; }
+
+@media (max-width: 600px) {
+  .barra-nav a { padding: 7px 8px; }
+  .emp-cartao { padding: 16px; }
+  .emp-topo-acao, .emp-topo-acao .btn { width: 100%; }
+  .emp-acoes .btn { flex: 1 1 auto; }
+  .emp-cidade { grid-template-columns: minmax(0, 1fr) 84px 44px; }
+  .emp-salario input { max-width: none; }
+  .emp-form-acoes .btn { flex: 1 1 auto; }
+  .emp-cabeca h1 { font-size: 1.3rem; }
+  .emp-grafico { height: 220px; }
+  .emp-achado-acoes .btn { flex: 1 1 auto; }
+}
+@media (max-width: 420px) {
+  .barra-acoes [data-tema-botao] { display: none; }
+}
